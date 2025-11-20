@@ -15,7 +15,6 @@ import {
   Coffee,
   AlertCircle,
   CheckCircle2,
-  ArrowLeft,
 } from "lucide-react";
 import { Emotion } from "@/types/journal";
 import Link from "next/link";
@@ -46,12 +45,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto space-y-8">
-        <header className="flex items-center gap-4 mb-8">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-          </Link>
+        <header className="mb-8 pt-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Reflection History</h1>
             <p className="text-muted-foreground">A look back at your daily reflections.</p>

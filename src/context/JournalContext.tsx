@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { JournalEntry, DailyReflection, EmotionTally, Emotion } from "@/types/journal";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { JournalEntry, DailyReflection } from "@/types/journal";
 
 interface JournalContextType {
   entries: JournalEntry[];
@@ -17,20 +17,25 @@ interface JournalContextType {
 const JournalContext = createContext<JournalContextType | undefined>(undefined);
 
 export const JournalProvider = ({ children }: { children: ReactNode }) => {
-  const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [reflections, setReflections] = useState<DailyReflection[]>([]);
+  const [entries, setEntries] = useState<JournalEntry[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("journal_entries");
+      if (saved) {
+        return JSON.parse(saved, (key, value) => (key === "timestamp" ? new Date(value) : value));
+      }
+    }
+    return [];
+  });
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedEntries = localStorage.getItem("journal_entries");
-    const savedReflections = localStorage.getItem("journal_reflections");
-    if (savedEntries)
-      setEntries(JSON.parse(savedEntries, (key, value) => (key === "timestamp" ? new Date(value) : value)));
-    if (savedReflections)
-      setReflections(
-        JSON.parse(savedReflections, (key, value) => (key === "timestamp" ? new Date(value) : value))
-      );
-  }, []);
+  const [reflections, setReflections] = useState<DailyReflection[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("journal_reflections");
+      if (saved) {
+        return JSON.parse(saved, (key, value) => (key === "timestamp" ? new Date(value) : value));
+      }
+    }
+    return [];
+  });
 
   // Save to localStorage on change
   useEffect(() => {

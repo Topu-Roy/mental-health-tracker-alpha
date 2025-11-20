@@ -5,11 +5,13 @@ import { useJournal } from "@/context/JournalContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send } from "lucide-react";
+import { Send, Trash2, Edit2, X, Check } from "lucide-react";
 
 export function JournalList() {
-  const { entries, addEntry } = useJournal();
+  const { entries, addEntry, deleteEntry, updateEntry } = useJournal();
   const [newEntry, setNewEntry] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
 
   const handleSubmit = () => {
     if (!newEntry.trim()) return;
@@ -24,76 +26,131 @@ export function JournalList() {
     }
   };
 
+  const startEditing = (id: string, content: string) => {
+    setEditingId(id);
+    setEditContent(content);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditContent("");
+  };
+
+  const saveEdit = (id: string) => {
+    if (editContent.trim()) {
+      updateEntry(id, editContent);
+    }
+    setEditingId(null);
+    setEditContent("");
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm("Are you sure you want to delete this entry?")) {
+      deleteEntry(id);
+    }
+  };
+
   // Group entries by date
   const groupedEntries = entries.reduce((groups, entry) => {
-    const date = new Date(entry.timestamp).toISOString().split("T")[0];
-    if (!groups[date]) groups[date] = [];
+    const date = new Date(entry.timestamp).toDateString();
+    if (!groups[date]) {
+      groups[date] = [];
+    }
     groups[date].push(entry);
     return groups;
   }, {} as Record<string, typeof entries>);
 
   return (
-    <div className="flex flex-col h-full space-y-4">
-      <p className="text-2xl font-bold">Daily Journal</p>
+    <div className="flex flex-col h-full space-y-6">
+      <Card className="p-4">
+        <div className="flex gap-4">
+          <Textarea
+            placeholder="How are you feeling right now?"
+            value={newEntry}
+            onChange={(e) => setNewEntry(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="min-h-[80px] resize-none"
+          />
+          <Button
+            onClick={handleSubmit}
+            size="icon"
+            className="h-auto w-12 self-end mb-1"
+            disabled={!newEntry.trim()}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </Card>
 
-      <div className="relative">
-        <Textarea
-          value={newEntry}
-          onChange={(e) => setNewEntry(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="What's on your mind?"
-          className="min-h-[100px] pr-12 resize-none bg-card/50 backdrop-blur focus:bg-card transition-colors"
-        />
-        <Button
-          size="icon"
-          onClick={handleSubmit}
-          disabled={!newEntry.trim()}
-          className="absolute bottom-3 right-3 h-8 w-8"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <Card className="flex-1 flex flex-col overflow-hidden border-none shadow-none bg-transparent">
-        <CardContent className="flex-1 p-0 overflow-hidden">
-          <div className="h-[calc(100vh-300px)] pr-4 overflow-y-auto custom-scrollbar">
-            <div className="space-y-8">
-              {Object.entries(groupedEntries).map(([date, dayEntries]) => (
-                <div key={date} className="space-y-4">
-                  <h3 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background/95 backdrop-blur py-2 z-10">
-                    {new Date(date).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </h3>
-                  <div className="space-y-4">
-                    {dayEntries.map((entry) => (
-                      <div
-                        key={entry.id}
-                        className="bg-card p-4 rounded-lg border shadow-sm animate-in fade-in slide-in-from-bottom-2"
-                      >
-                        <p className="whitespace-pre-wrap leading-relaxed">{entry.content}</p>
-                        <p className="text-xs text-muted-foreground mt-2 text-right">
-                          {new Date(entry.timestamp).toLocaleTimeString("en-US", {
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </p>
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+        {Object.entries(groupedEntries).map(([date, dayEntries]) => (
+          <div key={date} className="space-y-4">
+            <h3 className="text-sm font-medium text-muted-foreground sticky top-0 bg-background py-2 z-10">
+              {new Date(date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </h3>
+            <div className="space-y-4">
+              {dayEntries.map((entry) => (
+                <Card key={entry.id} className="relative group">
+                  <CardContent className="p-4 pt-4">
+                    {editingId === entry.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="ghost" onClick={cancelEditing}>
+                            <X className="h-4 w-4 mr-1" /> Cancel
+                          </Button>
+                          <Button size="sm" onClick={() => saveEdit(entry.id)}>
+                            <Check className="h-4 w-4 mr-1" /> Save
+                          </Button>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-start gap-4">
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed flex-1">
+                            {entry.content}
+                          </p>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            {new Date(entry.timestamp).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-background/80 backdrop-blur-sm rounded-md">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => startEditing(entry.id, entry.content)}
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(entry.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
               ))}
-              {entries.length === 0 && (
-                <div className="text-center text-muted-foreground py-20">
-                  <p>No entries yet. Start writing about your day...</p>
-                </div>
-              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        ))}
+        {entries.length === 0 && (
+          <div className="text-center text-muted-foreground py-10">No entries yet. Start writing above!</div>
+        )}
+      </div>
     </div>
   );
 }

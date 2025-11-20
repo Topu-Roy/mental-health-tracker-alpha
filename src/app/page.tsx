@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { JournalProvider } from "@/context/JournalContext";
 import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { ReflectionWizard } from "@/components/ReflectionWizard";
 
-function AppContent() {
+export default function Home() {
   const [isReflecting, setIsReflecting] = useState(false);
 
   return (
@@ -32,13 +31,5 @@ function AppContent() {
         <ReflectionWizard onComplete={() => setIsReflecting(false)} onCancel={() => setIsReflecting(false)} />
       )}
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <JournalProvider>
-      <AppContent />
-    </JournalProvider>
   );
 }

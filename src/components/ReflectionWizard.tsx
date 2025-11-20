@@ -59,11 +59,14 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 export function ReflectionWizard({ onComplete, onCancel, initialData }: ReflectionWizardProps) {
-  const { saveReflection } = useJournal();
-  const [step, setStep] = useState(initialData ? 4 : 1);
+  const { saveReflection, todayReflection } = useJournal();
+  // Use initialData if provided, otherwise fall back to todayReflection from context
+  const data = initialData || todayReflection;
 
-  const [assessment, setAssessment] = useState<number>(initialData?.overallAssessment ?? 5);
-  const [generalMood, setGeneralMood] = useState<Emotion | null>(initialData?.generalMood ?? null);
+  const [step, setStep] = useState(data ? 4 : 1);
+
+  const [assessment, setAssessment] = useState<number>(data?.overallAssessment ?? 5);
+  const [generalMood, setGeneralMood] = useState<Emotion | null>(data?.generalMood ?? null);
   const [emotionTallies, setEmotionTallies] = useState<Record<Emotion, number>>(() => {
     const initial: Record<Emotion, number> = {
       Happy: 0,
@@ -80,8 +83,8 @@ export function ReflectionWizard({ onComplete, onCancel, initialData }: Reflecti
       Hopeful: 0,
     };
 
-    if (initialData?.emotions) {
-      initialData.emotions.forEach((tally) => {
+    if (data?.emotions) {
+      data.emotions.forEach((tally) => {
         if (initial[tally.emotion] !== undefined) {
           initial[tally.emotion] = tally.count;
         }
@@ -89,8 +92,8 @@ export function ReflectionWizard({ onComplete, onCancel, initialData }: Reflecti
     }
     return initial;
   });
-  const [learned, setLearned] = useState(initialData?.learned ?? "");
-  const [lessons, setLessons] = useState(initialData?.lessons ?? "");
+  const [learned, setLearned] = useState(data?.learned ?? "");
+  const [lessons, setLessons] = useState(data?.lessons ?? "");
 
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);

@@ -8,10 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Trash2, Edit2, X, Check } from "lucide-react";
 
 export function JournalList() {
-  const { entries, addEntry, deleteEntry, updateEntry } = useJournal();
+  const { entries: allEntries, addEntry, deleteEntry, updateEntry } = useJournal();
+  const [mounted, setMounted] = useState(false);
   const [newEntry, setNewEntry] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const entries = mounted ? allEntries : [];
 
   const handleSubmit = () => {
     if (!newEntry.trim()) return;
@@ -62,24 +69,19 @@ export function JournalList() {
 
   return (
     <div className="flex flex-col h-full space-y-6">
+      <p className="font-semibold text-2xl">Add new entry</p>
+
       <Card className="p-4">
-        <div className="flex gap-4">
-          <Textarea
-            placeholder="How are you feeling right now?"
-            value={newEntry}
-            onChange={(e) => setNewEntry(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="min-h-[80px] resize-none"
-          />
-          <Button
-            onClick={handleSubmit}
-            size="icon"
-            className="h-auto w-12 self-end mb-1"
-            disabled={!newEntry.trim()}
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+        <Textarea
+          placeholder="How are you feeling right now?"
+          value={newEntry}
+          onChange={(e) => setNewEntry(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="min-h-[80px] resize-none"
+        />
+        <Button onClick={handleSubmit} disabled={!newEntry.trim()} className="max-w-12">
+          <Send className="h-4 w-4" />
+        </Button>
       </Card>
 
       <div className="flex-1 overflow-y-auto space-y-6 pr-2">

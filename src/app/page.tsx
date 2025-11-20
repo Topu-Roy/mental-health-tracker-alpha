@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
-import { JournalProvider } from '@/context/JournalContext';
-import { Dashboard } from '@/components/Dashboard';
-import { JournalList } from '@/components/JournalList';
-import { ReflectionWizard } from '@/components/ReflectionWizard';
-import { Toaster } from '@/components/ui/sonner';
+import { useState } from "react";
+import { JournalProvider } from "@/context/JournalContext";
+import { Dashboard } from "@/components/Dashboard";
+import { JournalList } from "@/components/JournalList";
+import { ReflectionWizard } from "@/components/ReflectionWizard";
 
 function AppContent() {
   const [isReflecting, setIsReflecting] = useState(false);
@@ -21,7 +20,7 @@ function AppContent() {
         </header>
 
         <Dashboard onStartReflection={() => setIsReflecting(true)} />
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
           <div className="lg:col-span-3 h-full">
             <JournalList />
@@ -30,12 +29,8 @@ function AppContent() {
       </div>
 
       {isReflecting && (
-        <ReflectionWizard 
-          onComplete={() => setIsReflecting(false)} 
-          onCancel={() => setIsReflecting(false)} 
-        />
+        <ReflectionWizard onComplete={() => setIsReflecting(false)} onCancel={() => setIsReflecting(false)} />
       )}
-      <Toaster />
     </div>
   );
 }

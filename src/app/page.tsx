@@ -5,13 +5,18 @@ import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { ReflectionWizard } from "@/components/ReflectionWizard";
 
+import { PerspectiveShifter } from "@/components/PerspectiveShifter";
+
 export default function Home() {
   const [isReflecting, setIsReflecting] = useState(false);
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-8">
-        <div className="pt-8">
+        <div className="pt-8 space-y-4">
+          <div className="flex justify-end">
+            <PerspectiveShifter />
+          </div>
           <Dashboard onStartReflection={() => setIsReflecting(true)} />
         </div>
 

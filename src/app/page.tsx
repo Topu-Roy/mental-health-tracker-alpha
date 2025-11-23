@@ -1,20 +1,51 @@
 "use client";
 
 import { useState } from "react";
+import { useJournal } from "@/context/JournalContext";
 import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { ReflectionWizard } from "@/components/ReflectionWizard";
-
+import { SOSPanel } from "@/components/SOSPanel";
 import { PerspectiveShifter } from "@/components/PerspectiveShifter";
+import { Flame, HeartHandshake, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Emotion } from "@/types/journal";
 
 export default function Home() {
+  const { todayReflection, reflections } = useJournal();
   const [isReflecting, setIsReflecting] = useState(false);
+  const [sosMode, setSosMode] = useState<"burn" | "lessons" | null>(null);
+
+  const lastReflection = reflections[reflections.length - 1];
+  const currentMood = todayReflection?.generalMood || lastReflection?.generalMood;
+
+  const negativeMoods: Emotion[] = ["Sad", "Anxious", "Angry", "Frustrated", "Confused", "Tired"];
+  const isSad = currentMood && negativeMoods.includes(currentMood);
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="pt-8 space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {isSad && (
+              <>
+                <Button
+                  variant="destructive"
+                  className="gap-2 shadow-lg animate-in fade-in slide-in-from-top-4"
+                  onClick={() => setSosMode("burn")}
+                >
+                  <Flame className="h-4 w-4" />
+                  Burn Away Stress
+                </Button>
+                <Button
+                  className="gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg animate-in fade-in slide-in-from-top-4"
+                  onClick={() => setSosMode("lessons")}
+                >
+                  <HeartHandshake className="h-4 w-4" />
+                  Past Learnings
+                </Button>
+              </>
+            )}
             <PerspectiveShifter />
           </div>
           <Dashboard onStartReflection={() => setIsReflecting(true)} />
@@ -30,26 +61,22 @@ export default function Home() {
       {isReflecting && (
         <ReflectionWizard onComplete={() => setIsReflecting(false)} onCancel={() => setIsReflecting(false)} />
       )}
+
+      {sosMode && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-2xl relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10"
+              onClick={() => setSosMode(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <SOSPanel mode={sosMode} onComplete={() => setSosMode(null)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-// 1. THE CELEBRATION (Confetti):
-//    - Give a confetti explosion when the user submits a "Good" (Green) mood entry.
-//    - It should feel rewarding but not last too long (3 seconds).
-
-// 2. THE STREAK FLAME (Consistency):
-//    - Create a feature to track the user's mood entries for streak.
-//    - Logic: Check LocalStorage for the last entry date. If the last entry was yesterday or today, increment the streak. If older, reset to 0.
-//    - UI: Display a Flame Icon (use Lucide-React or Heroicons).
-//      - < 3 days: Yellow/Small.
-//      - 7+ days: Blue/Large/Glowing.
-
-// 3. THE RESCUE MISSION (SOS & Breathing):
-//    - Create an `SOSPanel` component that only appears if the user selects "Bad" (Red) mood or "Anxiety" tags. Show 3 life lessons of the user from the past.
-//    - Include a "Burn Page" button: A text area where I can type, and when I click "Burn", the text turns into an ash animation or fades out, clearing the state (symbolic deletion).
-
-// 4. THE PERSPECTIVE SHIFTER (Logic):
-//    - Create a function `getHappyMemory()`.
-//    - Logic: Scan the LocalStorage array of past entries. Find one random entry where `mood === 'Good'`.
-//    - UI: A "Get Perspective" button that, when clicked, shows this past entry in a modal card with the text: "Remember this moment? You will feel this way again."

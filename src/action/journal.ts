@@ -45,3 +45,36 @@ export async function getJournalEntries() {
 
   return entries;
 }
+
+export async function deleteJournalEntry(id: string) {
+  const session = await getServerAuthSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  await db.journalEntry.delete({
+    where: {
+      id,
+      userId: session.user.id,
+    },
+  });
+}
+
+export async function updateJournalEntry(id: string, content: string) {
+  const session = await getServerAuthSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  const entry = await db.journalEntry.update({
+    where: {
+      id,
+      userId: session.user.id,
+    },
+    data: {
+      content,
+    },
+  });
+
+  return entry;
+}

@@ -17,12 +17,13 @@ enum Mood {
 
 model JournalEntry {
   id        String   @id @default(uuid())
+  userId    String
   content   String
   mood      Mood
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("journal_entry")
@@ -30,15 +31,16 @@ model JournalEntry {
 
 model DailyReflection {
   id             String     @id @default(uuid())
+  userId         String
   date           DateTime   @default(now()) // Represents the day being reflected upon
   overallMood    Mood
   emotions       Json // Store emotions and their counts/intensity
   lessonsLearned String? // Summary of lessons
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
-  userId         String
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   learnings      Learning[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // One reflection per user per day
   @@unique([userId, date])
@@ -47,14 +49,15 @@ model DailyReflection {
 }
 
 model Learning {
-  id                String          @id @default(uuid())
-  content           String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  dailyReflectionId String
-  dailyReflection   DailyReflection @relation(fields: [dailyReflectionId], references: [id], onDelete: Cascade)
+  id                String   @id @default(uuid())
   userId            String
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyReflectionId String
+  content           String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  dailyReflection DailyReflection @relation(fields: [dailyReflectionId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([dailyReflectionId])

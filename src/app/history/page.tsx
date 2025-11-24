@@ -1,43 +1,25 @@
 "use client";
 
 import React from "react";
-import { useJournal } from "@/context/JournalContext";
+import { useReflections } from "@/hooks/useReflection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Smile,
-  Frown,
-  ThumbsUp,
-  Heart,
-  CloudRain,
-  Zap,
-  Coffee,
-  AlertCircle,
-  CheckCircle2,
-} from "lucide-react";
-import { Emotion } from "@/types/journal";
+import { Smile, ThumbsUp, Heart, CloudRain, AlertCircle, Meh } from "lucide-react";
 import Link from "next/link";
 
-const EMOTION_ICONS: Record<Emotion, React.ReactNode> = {
-  Happy: <Smile className="w-4 h-4" />,
-  Excited: <Zap className="w-4 h-4" />,
-  Grateful: <Heart className="w-4 h-4" />,
-  Relaxed: <Coffee className="w-4 h-4" />,
-  Sad: <CloudRain className="w-4 h-4" />,
-  Anxious: <AlertCircle className="w-4 h-4" />,
-  Angry: <Frown className="w-4 h-4" />,
-  Tired: <div className="w-4 h-4">😴</div>,
-  Frustrated: <Frown className="w-4 h-4" />,
-  Confused: <AlertCircle className="w-4 h-4" />,
-  Proud: <ThumbsUp className="w-4 h-4" />,
-  Hopeful: <CheckCircle2 className="w-4 h-4" />,
+const MOOD_ICONS: Record<string, React.ReactNode> = {
+  Great: <Heart className="w-4 h-4 text-pink-500" />,
+  Good: <ThumbsUp className="w-4 h-4 text-green-500" />,
+  Okay: <Meh className="w-4 h-4 text-yellow-500" />,
+  Bad: <CloudRain className="w-4 h-4 text-blue-500" />,
+  Awful: <AlertCircle className="w-4 h-4 text-red-500" />,
 };
 
 export default function HistoryPage() {
-  const { reflections } = useJournal();
+  const { data: reflections = [] } = useReflections();
 
-  // Sort reflections by date descending
+  // Sort reflections by date descending (already sorted by server, but good to ensure)
   const sortedReflections = [...reflections].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -56,55 +38,58 @@ export default function HistoryPage() {
           {sortedReflections.length === 0 ? (
             <div className="text-center text-muted-foreground py-10">No reflections recorded yet.</div>
           ) : (
-            sortedReflections.map((reflection) => (
-              <Card key={reflection.id} className="relative">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">
-                      {new Date(reflection.date).toLocaleDateString("en-US", {
-                        weekday: "long",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </CardTitle>
-                    <div className="flex items-center gap-2 px-2 py-1 bg-secondary rounded-full text-xs font-medium">
-                      {EMOTION_ICONS[reflection.generalMood]}
-                      <span>{reflection.generalMood}</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Day Rating:</span>
-                    <span className="font-bold">{reflection.overallAssessment}/10</span>
-                  </div>
+            sortedReflections.map((reflection) => {
+              const emotions = reflection.emotions as Record<string, number>;
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const emotionEntries = Object.entries(emotions).filter(([_, count]) => count > 0);
 
-                  {reflection.emotions.length > 0 && (
-                    <div>
-                      <span className="text-muted-foreground block mb-1">Emotions:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {reflection.emotions.slice(0, 5).map((t) => (
-                          <Badge key={t.emotion} variant="outline" className="text-xs">
-                            {t.emotion} ({t.count})
-                          </Badge>
-                        ))}
-                        {reflection.emotions.length > 5 && (
-                          <span className="text-xs text-muted-foreground self-center">
-                            +{reflection.emotions.length - 5} more
-                          </span>
-                        )}
+              return (
+                <Card key={reflection.id} className="relative">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">
+                        {new Date(reflection.date).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 px-2 py-1 bg-secondary rounded-full text-xs font-medium">
+                        {MOOD_ICONS[reflection.overallMood] || <Smile className="w-4 h-4" />}
+                        <span>{reflection.overallMood}</span>
                       </div>
                     </div>
-                  )}
+                  </CardHeader>
+                  <CardContent className="space-y-4 text-sm">
+                    {/* Overall Assessment removed as it's not in the new schema */}
 
-                  <Link href={`/history/${reflection.id}`} className="block mt-4">
-                    <Button variant="outline" size="sm" className="w-full">
-                      View Details
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            ))
+                    {emotionEntries.length > 0 && (
+                      <div>
+                        <span className="text-muted-foreground block mb-1">Emotions:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {emotionEntries.slice(0, 5).map(([emotion, count]) => (
+                            <Badge key={emotion} variant="outline" className="text-xs">
+                              {emotion} ({count})
+                            </Badge>
+                          ))}
+                          {emotionEntries.length > 5 && (
+                            <span className="text-xs text-muted-foreground self-center">
+                              +{emotionEntries.length - 5} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <Link href={`/history/${reflection.id}`} className="block mt-4">
+                      <Button variant="outline" size="sm" className="w-full">
+                        View Details
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
         </div>
       </div>

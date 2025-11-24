@@ -2,7 +2,6 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { JournalProvider } from "@/context/JournalContext";
 import { Navbar } from "@/components/Navbar";
 import { QueryProvider } from "@/provider/tanstack-query/provider";
 
@@ -30,11 +29,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryProvider>
-          <JournalProvider>
-            <Navbar />
-            {children}
-            <Toaster />
-          </JournalProvider>
+          <Navbar />
+          {children}
+          <Toaster />
         </QueryProvider>
       </body>
     </html>

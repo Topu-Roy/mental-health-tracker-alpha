@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useJournal } from "@/context/JournalContext";
+import { useJournalEntries } from "@/hooks/useJournal";
+import { useReflections, useDailyReflection } from "@/hooks/useReflection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Moon, Calendar, Flame } from "lucide-react";
@@ -12,7 +13,9 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onStartReflection }: DashboardProps) {
-  const { entries, reflections, todayReflection } = useJournal();
+  const { data: entries = [] } = useJournalEntries();
+  const { data: reflections = [] } = useReflections();
+  const { data: todayReflection } = useDailyReflection({ date: new Date() });
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -20,19 +23,20 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
   }, []);
 
   const todayEntries = entries.filter(
-    (e) => new Date(e.timestamp).toDateString() === new Date().toDateString()
+    (e) => new Date(e.createdAt).toDateString() === new Date().toDateString()
   );
 
-  const lastReflection = reflections[reflections.length - 1];
+  const lastReflection = reflections[0]; // Reflections are ordered by date desc in the action
 
   const streak = React.useMemo(() => {
     if (!reflections.length) return 0;
 
-    const sortedReflections = [...reflections].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
+    // Reflections are already sorted by date desc from the server
+    const sortedReflections = [...reflections];
 
-    const uniqueDates = Array.from(new Set(sortedReflections.map((r) => r.date)));
+    const uniqueDates = Array.from(
+      new Set(sortedReflections.map((r) => new Date(r.date).toISOString().split("T")[0]))
+    );
 
     if (uniqueDates.length === 0) return 0;
 
@@ -148,7 +152,7 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold" suppressHydrationWarning>
-            {todayReflection?.generalMood || lastReflection?.generalMood || "—"}
+            {todayReflection?.overallMood || lastReflection?.overallMood || "—"}
           </div>
           <p className="text-xs text-muted-foreground" suppressHydrationWarning>
             {todayReflection ? "Recorded today" : "Last recorded mood"}

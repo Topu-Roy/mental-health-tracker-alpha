@@ -89,3 +89,24 @@ export async function getDailyReflection(date: Date) {
 
   return reflection;
 }
+
+export async function getReflections() {
+  const session = await getServerAuthSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  const reflections = await db.dailyReflection.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    orderBy: {
+      date: "desc",
+    },
+    include: {
+      learnings: true,
+    },
+  });
+
+  return reflections;
+}

@@ -1,16 +1,37 @@
 "use client";
 
 import React, { useState } from "react";
-import { useJournal } from "@/context/JournalContext";
+import {
+  useJournalEntries,
+  useCreateJournalEntry,
+  useDeleteJournalEntry,
+  useUpdateJournalEntry,
+} from "@/hooks/useJournal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Trash2, Edit2, X, Check } from "lucide-react";
+import { Send, Trash2, Edit2, X, Check, Smile, Frown, Meh, ThumbsUp, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type Mood = "Great" | "Good" | "Okay" | "Bad" | "Awful";
+
+const MOODS: { value: Mood; icon: React.ElementType; label: string; color: string }[] = [
+  { value: "Great", icon: Heart, label: "Great", color: "text-pink-500" },
+  { value: "Good", icon: ThumbsUp, label: "Good", color: "text-green-500" },
+  { value: "Okay", icon: Meh, label: "Okay", color: "text-yellow-500" },
+  { value: "Bad", icon: Frown, label: "Bad", color: "text-orange-500" },
+  { value: "Awful", icon: Frown, label: "Awful", color: "text-red-500" },
+];
 
 export function JournalList() {
-  const { entries: allEntries, addEntry, deleteEntry, updateEntry } = useJournal();
+  const { data: entries = [] } = useJournalEntries();
+  const createEntry = useCreateJournalEntry();
+  const deleteEntry = useDeleteJournalEntry();
+  const updateEntry = useUpdateJournalEntry();
+
   const [mounted, setMounted] = useState(false);
   const [newEntry, setNewEntry] = useState("");
+  const [selectedMood, setSelectedMood] = useState<Mood>("Good");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
 
@@ -18,12 +39,11 @@ export function JournalList() {
     setMounted(true);
   }, []);
 
-  const entries = mounted ? allEntries : [];
-
   const handleSubmit = () => {
     if (!newEntry.trim()) return;
-    addEntry(newEntry);
+    createEntry.mutate({ content: newEntry, mood: selectedMood });
     setNewEntry("");
+    setSelectedMood("Good");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -45,7 +65,7 @@ export function JournalList() {
 
   const saveEdit = (id: string) => {
     if (editContent.trim()) {
-      updateEntry(id, editContent);
+      updateEntry.mutate({ id, content: editContent });
     }
     setEditingId(null);
     setEditContent("");
@@ -53,13 +73,13 @@ export function JournalList() {
 
   const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this entry?")) {
-      deleteEntry(id);
+      deleteEntry.mutate(id);
     }
   };
 
   // Group entries by date
   const groupedEntries = entries.reduce((groups, entry) => {
-    const date = new Date(entry.timestamp).toDateString();
+    const date = new Date(entry.createdAt).toDateString();
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -67,21 +87,55 @@ export function JournalList() {
     return groups;
   }, {} as Record<string, typeof entries>);
 
+  if (!mounted) return null;
+
   return (
     <div className="flex flex-col h-full space-y-6">
       <p className="font-semibold text-2xl">Add new entry</p>
 
-      <Card className="p-4">
-        <Textarea
-          placeholder="How are you feeling right now?"
-          value={newEntry}
-          onChange={(e) => setNewEntry(e.target.value)}
-          onKeyDown={handleKeyDown}
-          className="min-h-[80px] resize-none"
-        />
-        <Button onClick={handleSubmit} disabled={!newEntry.trim()} className="max-w-12">
-          <Send className="h-4 w-4" />
-        </Button>
+      <Card className="p-4 space-y-4">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {MOODS.map((mood) => {
+            const Icon = mood.icon;
+            return (
+              <Button
+                key={mood.value}
+                variant={selectedMood === mood.value ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedMood(mood.value)}
+                className={cn(
+                  "flex items-center gap-2 transition-all",
+                  selectedMood === mood.value ? "" : "hover:bg-muted"
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-4 w-4",
+                    selectedMood === mood.value ? "text-primary-foreground" : mood.color
+                  )}
+                />
+                {mood.label}
+              </Button>
+            );
+          })}
+        </div>
+        <div className="relative">
+          <Textarea
+            placeholder="How are you feeling right now?"
+            value={newEntry}
+            onChange={(e) => setNewEntry(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="min-h-[80px] resize-none pr-12"
+          />
+          <Button
+            onClick={handleSubmit}
+            disabled={!newEntry.trim() || createEntry.isPending}
+            className="absolute bottom-2 right-2 h-8 w-8 p-0"
+            size="icon"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </Card>
 
       <div className="flex-1 overflow-y-auto space-y-6 pr-2">
@@ -105,7 +159,11 @@ export function JournalList() {
                           <Button size="sm" variant="ghost" onClick={cancelEditing}>
                             <X className="h-4 w-4 mr-1" /> Cancel
                           </Button>
-                          <Button size="sm" onClick={() => saveEdit(entry.id)}>
+                          <Button
+                            size="sm"
+                            onClick={() => saveEdit(entry.id)}
+                            disabled={updateEntry.isPending}
+                          >
                             <Check className="h-4 w-4 mr-1" /> Save
                           </Button>
                         </div>
@@ -113,15 +171,27 @@ export function JournalList() {
                     ) : (
                       <>
                         <div className="flex justify-between items-start gap-4">
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed flex-1">
-                            {entry.content}
-                          </p>
-                          <span className="text-xs text-muted-foreground shrink-0">
-                            {new Date(entry.timestamp).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-center gap-2">
+                              {entry.mood && (
+                                <span
+                                  className={cn(
+                                    "text-xs px-2 py-0.5 rounded-full bg-muted font-medium",
+                                    MOODS.find((m) => m.value === entry.mood)?.color
+                                  )}
+                                >
+                                  {entry.mood}
+                                </span>
+                              )}
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(entry.createdAt).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{entry.content}</p>
+                          </div>
                         </div>
                         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 bg-background/80 backdrop-blur-sm rounded-md">
                           <Button

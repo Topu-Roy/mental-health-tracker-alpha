@@ -1,8 +1,15 @@
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { createDailyReflection, getDailyReflection } from "@/action/reflection";
+import { createDailyReflection, getDailyReflection, getReflections } from "@/action/reflection";
 import { queryClient } from "@/provider/tanstack-query/provider";
+
+export function useReflections() {
+  return useQuery({
+    queryKey: ["reflections"],
+    queryFn: () => getReflections(),
+  });
+}
 
 export function useDailyReflection({ date }: { date: Date }) {
   return useQuery({

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useJournal } from "@/context/JournalContext";
+import { useReflections } from "@/hooks/useReflection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,7 @@ interface SOSPanelProps {
 }
 
 export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
-  const { reflections } = useJournal();
+  const { data: reflections = [] } = useReflections();
   const [lessons, setLessons] = useState<string[]>([]);
   const [burnText, setBurnText] = useState("");
   const [isBurning, setIsBurning] = useState(false);
@@ -22,10 +22,22 @@ export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
 
   useEffect(() => {
     if (hasLoadedLessons.current) return;
+    if (reflections.length === 0) return;
 
-    const allLessons = reflections
-      .filter((r) => r.lessons && r.lessons.trim().length > 0)
-      .map((r) => r.lessons);
+    const allLessons = reflections.flatMap((r) => {
+      const list: string[] = [];
+      if (r.lessonsLearned && r.lessonsLearned.trim().length > 0) {
+        list.push(r.lessonsLearned);
+      }
+      if (r.learnings && Array.isArray(r.learnings)) {
+        r.learnings.forEach((l: any) => {
+          if (l.content && l.content.trim().length > 0) {
+            list.push(l.content);
+          }
+        });
+      }
+      return list;
+    });
 
     if (allLessons.length > 0) {
       const shuffled = allLessons.sort(() => 0.5 - Math.random());

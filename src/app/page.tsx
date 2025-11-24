@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useJournal } from "@/context/JournalContext";
+import { useDailyReflection, useReflections } from "@/hooks/useReflection";
 import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { ReflectionWizard } from "@/components/ReflectionWizard";
@@ -9,18 +9,17 @@ import { SOSPanel } from "@/components/SOSPanel";
 import { PerspectiveShifter } from "@/components/PerspectiveShifter";
 import { Flame, HeartHandshake, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Emotion } from "@/types/journal";
 
 export default function Home() {
-  const { todayReflection, reflections } = useJournal();
+  const { data: todayReflection } = useDailyReflection({ date: new Date() });
+  const { data: reflections = [] } = useReflections();
   const [isReflecting, setIsReflecting] = useState(false);
   const [sosMode, setSosMode] = useState<"burn" | "lessons" | null>(null);
 
-  const lastReflection = reflections[reflections.length - 1];
-  const currentMood = todayReflection?.generalMood || lastReflection?.generalMood;
+  const lastReflection = reflections[0]; // Ordered by date desc
+  const currentMood = todayReflection?.overallMood || lastReflection?.overallMood;
 
-  const negativeMoods: Emotion[] = ["Sad", "Anxious", "Angry", "Frustrated", "Confused", "Tired"];
-  const isSad = currentMood && negativeMoods.includes(currentMood);
+  const isSad = currentMood === "Bad" || currentMood === "Awful";
 
   return (
     <div className="min-h-screen bg-background p-8">

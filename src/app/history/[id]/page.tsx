@@ -1,44 +1,25 @@
 "use client";
 
 import React from "react";
-import { useJournal } from "@/context/JournalContext";
+import { useReflections } from "@/hooks/useReflection";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Smile,
-  Frown,
-  ThumbsUp,
-  Heart,
-  CloudRain,
-  Zap,
-  Coffee,
-  AlertCircle,
-  CheckCircle2,
-  ArrowLeft,
-} from "lucide-react";
-import { Emotion } from "@/types/journal";
+import { Smile, ThumbsUp, Heart, CloudRain, AlertCircle, ArrowLeft, Meh } from "lucide-react";
 import Link from "next/link";
 
-const EMOTION_ICONS: Record<Emotion, React.ReactNode> = {
-  Happy: <Smile className="w-4 h-4" />,
-  Excited: <Zap className="w-4 h-4" />,
-  Grateful: <Heart className="w-4 h-4" />,
-  Relaxed: <Coffee className="w-4 h-4" />,
-  Sad: <CloudRain className="w-4 h-4" />,
-  Anxious: <AlertCircle className="w-4 h-4" />,
-  Angry: <Frown className="w-4 h-4" />,
-  Tired: <div className="w-4 h-4">😴</div>,
-  Frustrated: <Frown className="w-4 h-4" />,
-  Confused: <AlertCircle className="w-4 h-4" />,
-  Proud: <ThumbsUp className="w-4 h-4" />,
-  Hopeful: <CheckCircle2 className="w-4 h-4" />,
+const MOOD_ICONS: Record<string, React.ReactNode> = {
+  Great: <Heart className="w-4 h-4 text-pink-500" />,
+  Good: <ThumbsUp className="w-4 h-4 text-green-500" />,
+  Okay: <Meh className="w-4 h-4 text-yellow-500" />,
+  Bad: <CloudRain className="w-4 h-4 text-blue-500" />,
+  Awful: <AlertCircle className="w-4 h-4 text-red-500" />,
 };
 
 export default function HistoryDetailPage() {
   const { id } = useParams();
-  const { reflections } = useJournal();
+  const { data: reflections = [] } = useReflections();
   const router = useRouter();
 
   const reflection = reflections.find((r) => r.id === id);
@@ -51,6 +32,9 @@ export default function HistoryDetailPage() {
       </div>
     );
   }
+
+  const emotions = reflection.emotions as Record<string, number>;
+  const emotionEntries = Object.entries(emotions).filter(([_, count]) => count > 0);
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -82,14 +66,11 @@ export default function HistoryDetailPage() {
               <div className="flex flex-col space-y-2">
                 <span className="text-sm text-muted-foreground">General Mood</span>
                 <div className="flex items-center gap-2 text-lg font-medium">
-                  {EMOTION_ICONS[reflection.generalMood]}
-                  <span>{reflection.generalMood}</span>
+                  {MOOD_ICONS[reflection.overallMood] || <Smile className="w-4 h-4" />}
+                  <span>{reflection.overallMood}</span>
                 </div>
               </div>
-              <div className="flex flex-col space-y-2">
-                <span className="text-sm text-muted-foreground">Day Rating</span>
-                <div className="text-2xl font-bold">{reflection.overallAssessment}/10</div>
-              </div>
+              {/* Overall Assessment removed */}
             </CardContent>
           </Card>
 
@@ -98,11 +79,11 @@ export default function HistoryDetailPage() {
               <CardTitle>Emotions Felt</CardTitle>
             </CardHeader>
             <CardContent>
-              {reflection.emotions.length > 0 ? (
+              {emotionEntries.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {reflection.emotions.map((t) => (
-                    <Badge key={t.emotion} variant="secondary" className="text-sm py-1 px-3">
-                      {t.emotion} <span className="ml-2 opacity-70">x{t.count}</span>
+                  {emotionEntries.map(([emotion, count]) => (
+                    <Badge key={emotion} variant="secondary" className="text-sm py-1 px-3">
+                      {emotion} <span className="ml-2 opacity-70">x{count}</span>
                     </Badge>
                   ))}
                 </div>
@@ -119,7 +100,9 @@ export default function HistoryDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap leading-relaxed">
-                  {reflection.learned || <span className="text-muted-foreground italic">No entry.</span>}
+                  {reflection.lessonsLearned || (
+                    <span className="text-muted-foreground italic">No entry.</span>
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -129,9 +112,19 @@ export default function HistoryDetailPage() {
                 <CardTitle>Key Takeaways</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap leading-relaxed">
-                  {reflection.lessons || <span className="text-muted-foreground italic">No entry.</span>}
-                </p>
+                <div className="space-y-2">
+                  {reflection.learnings && reflection.learnings.length > 0 ? (
+                    <ul className="list-disc pl-5 space-y-1">
+                      {reflection.learnings.map((l, i: number) => (
+                        <li key={i} className="leading-relaxed">
+                          {l.content}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-muted-foreground italic">No entry.</span>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>

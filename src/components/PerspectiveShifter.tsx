@@ -1,23 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { useJournal } from "@/context/JournalContext";
+import { useReflections } from "@/hooks/useReflection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Sparkles, X, Quote, Calendar } from "lucide-react";
-import { DailyReflection, Emotion } from "@/types/journal";
+import { DailyReflection } from "@/generated/prisma/client";
+// import { DailyReflection, Emotion } from "@/types/journal"; // Types are now from Prisma or inferred
 
 export function PerspectiveShifter() {
-  const { reflections } = useJournal();
+  const { data: reflections = [] } = useReflections();
   const [isOpen, setIsOpen] = useState(false);
-  const [memory, setMemory] = useState<DailyReflection | null>(null);
+  const [memory, setMemory] = useState<DailyReflection | null>(null); // Using any for now to ease migration
 
   const getHappyMemory = () => {
     // Define "Good" moods
-    const goodMoods: Emotion[] = ["Happy", "Excited", "Grateful", "Proud", "Hopeful", "Relaxed"];
+    const goodMoods = ["Great", "Good", "Happy", "Excited", "Grateful", "Proud", "Hopeful", "Relaxed"];
 
     const happyReflections = reflections.filter(
-      (r) => goodMoods.includes(r.generalMood) && r.lessons // Ensure there's some content to show
+      (r) =>
+        goodMoods.includes(r.overallMood) && (r.lessonsLearned || (r.learnings && r.learnings.length > 0))
     );
 
     if (happyReflections.length === 0) {
@@ -55,6 +57,12 @@ export function PerspectiveShifter() {
     );
   }
 
+  const getMemoryContent = (mem: DailyReflection) => {
+    if (mem.lessonsLearned) return mem.lessonsLearned;
+    if (mem.lessonsLearned && mem.lessonsLearned.length > 0) return mem.lessonsLearned[0].content;
+    return "I had a really good day today.";
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-300 p-4">
       <Card className="w-full max-w-md relative animate-in zoom-in-95 duration-300 border-indigo-200 shadow-2xl">
@@ -91,10 +99,10 @@ export function PerspectiveShifter() {
 
                 <div className="space-y-1">
                   <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 mb-2">
-                    Feeling {memory.generalMood}
+                    Feeling {memory.overallMood}
                   </span>
                   <p className="text-slate-700 italic text-lg leading-relaxed">
-                    &quot;{memory.lessons || "I had a really good day today."}&quot;
+                    &quot;{getMemoryContent(memory)}&quot;
                   </p>
                 </div>
               </div>

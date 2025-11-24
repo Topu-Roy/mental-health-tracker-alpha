@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { JournalProvider } from "@/context/JournalContext";
 import { Navbar } from "@/components/Navbar";
+import { QueryProvider } from "@/provider/tanstack-query/provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,11 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <JournalProvider>
-          <Navbar />
-          {children}
-          <Toaster />
-        </JournalProvider>
+        <QueryProvider>
+          <JournalProvider>
+            <Navbar />
+            {children}
+            <Toaster />
+          </JournalProvider>
+        </QueryProvider>
       </body>
     </html>
   );

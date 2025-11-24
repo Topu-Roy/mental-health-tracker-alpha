@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useReflections } from "@/hooks/useReflection";
+import { useReflectionsQuery } from "@/hooks/useReflection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,7 @@ interface SOSPanelProps {
 }
 
 export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
-  const { data: reflections = [] } = useReflections();
+  const { data: reflections = [] } = useReflectionsQuery();
   const [lessons, setLessons] = useState<string[]>([]);
   const [burnText, setBurnText] = useState("");
   const [isBurning, setIsBurning] = useState(false);

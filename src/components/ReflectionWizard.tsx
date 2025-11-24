@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
-import { useCreateDailyReflection, useDailyReflection } from "@/hooks/useReflection";
+import { useCreateDailyReflectionMutation, useDailyReflectionQuery } from "@/hooks/useReflection";
 import { Button } from "@/components/ui/button";
 import { SOSPanel } from "@/components/SOSPanel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -20,26 +20,23 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
+import type { Mood } from "@/generated/prisma/enums";
 
 // Define Emotion type locally or import from a shared types file if available
 type Emotion =
   | "Happy"
   | "Excited"
-  | "Grateful"
   | "Relaxed"
   | "Sad"
   | "Anxious"
   | "Angry"
   | "Tired"
   | "Frustrated"
-  | "Confused"
-  | "Proud"
-  | "Hopeful";
+  | "Proud";
 
 interface ReflectionWizardProps {
   onComplete: () => void;
   onCancel: () => void;
-  initialData?: any; // Relaxing type for now to avoid conflicts during migration, ideally should be DailyReflection & { learnings: Learning[] }
 }
 
 const EMOTIONS: { label: Emotion; icon: React.ReactNode }[] = [
@@ -74,14 +71,11 @@ function MoonIcon({ className }: { className?: string }) {
   );
 }
 
-export function ReflectionWizard({ onComplete, onCancel, initialData }: ReflectionWizardProps) {
-  const { mutate: saveReflection } = useCreateDailyReflection({ date: new Date() });
-  const { data: todayReflection } = useDailyReflection({ date: new Date() });
+export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps) {
+  const { mutate: saveReflection } = useCreateDailyReflectionMutation({ date: new Date() });
+  const { data: todayReflection } = useDailyReflectionQuery({ date: new Date() });
 
-  // Use initialData if provided, otherwise fall back to todayReflection from query
-  const data = initialData || todayReflection;
-
-  const [step, setStep] = useState(data ? 4 : 1);
+  const [step, setStep] = useState(todayReflection ? 4 : 1);
   const [showSOS, setShowSOS] = useState(false);
 
   // Map fields: overallAssessment is not in Prisma schema, so we might drop it or map it to something else.
@@ -91,39 +85,23 @@ export function ReflectionWizard({ onComplete, onCancel, initialData }: Reflecti
   // For now, I'll ignore saving it to DB to stick to the schema provided.
   const [assessment, setAssessment] = useState<number>(5);
 
-  const [generalMood, setGeneralMood] = useState<string | null>(data?.overallMood ?? null);
+  const [generalMood, setGeneralMood] = useState<Mood | null>(todayReflection?.overallMood ?? null);
 
-  const [emotionTallies, setEmotionTallies] = useState<Record<string, number>>(() => {
-    const initial: Record<string, number> = {
-      Happy: 0,
-      Excited: 0,
-      Grateful: 0,
-      Relaxed: 0,
-      Sad: 0,
-      Anxious: 0,
-      Angry: 0,
-      Tired: 0,
-      Frustrated: 0,
-      Confused: 0,
-      Proud: 0,
-      Hopeful: 0,
-    };
-
-    if (data?.emotions) {
-      // data.emotions is Json, need to cast or iterate safely
-      const savedEmotions = data.emotions as Record<string, number>;
-      Object.entries(savedEmotions).forEach(([key, count]) => {
-        if (initial[key] !== undefined) {
-          initial[key] = count as number;
-        }
-      });
-    }
-    return initial;
+  const [emotionTallies, setEmotionTallies] = useState<Record<Emotion, number>>({
+    Happy: 0,
+    Excited: 0,
+    Relaxed: 0,
+    Sad: 0,
+    Anxious: 0,
+    Angry: 0,
+    Tired: 0,
+    Frustrated: 0,
+    Proud: 0,
   });
 
-  const [learned, setLearned] = useState(data?.lessonsLearned ?? "");
+  const [learned, setLearned] = useState(todayReflection?.lessonsLearned ?? "");
   // Map learnings array to string for editing
-  const [lessons, setLessons] = useState(data?.learnings?.map((l: any) => l.content).join("\n") ?? "");
+  const [lessons, setLessons] = useState(todayReflection?.learnings?.map((l) => l.content).join("\n") ?? "");
 
   const handleNext = () => {
     if (step === 1 && generalMood) {
@@ -190,7 +168,7 @@ export function ReflectionWizard({ onComplete, onCancel, initialData }: Reflecti
     }
 
     saveReflection({
-      overallMood: generalMood as any, // Cast to enum
+      overallMood: generalMood,
       emotions: emotionsToSave,
       lessonsLearned: learned,
       learnings: lessons.split("\n").filter((l) => l.trim().length > 0),

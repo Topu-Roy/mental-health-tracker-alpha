@@ -9,14 +9,14 @@ import {
 } from "@/action/journal";
 import { queryClient } from "@/provider/tanstack-query/provider";
 
-export function useJournalEntries() {
+export function useJournalEntriesQuery() {
   return useQuery({
     queryKey: ["journalEntries"],
     queryFn: () => getJournalEntries(),
   });
 }
 
-export function useCreateJournalEntry() {
+export function useCreateJournalEntryMutation() {
   return useMutation({
     mutationFn: createJournalEntry,
     onSuccess: () => {
@@ -25,7 +25,7 @@ export function useCreateJournalEntry() {
   });
 }
 
-export function useDeleteJournalEntry() {
+export function useDeleteJournalEntryMutation() {
   return useMutation({
     mutationFn: deleteJournalEntry,
     onSuccess: () => {
@@ -34,7 +34,7 @@ export function useDeleteJournalEntry() {
   });
 }
 
-export function useUpdateJournalEntry() {
+export function useUpdateJournalEntryMutation() {
   return useMutation({
     mutationFn: ({ id, content }: { id: string; content: string }) => updateJournalEntry(id, content),
     onSuccess: () => {

@@ -32,10 +32,10 @@ model JournalEntry {
 model DailyReflection {
   id             String     @id @default(uuid())
   userId         String
-  date           DateTime   @default(now()) // Represents the day being reflected upon
+  date           DateTime   @default(now())
   overallMood    Mood
-  emotions       Json // Store emotions and their counts/intensity
-  lessonsLearned String? // Summary of lessons
+  emotions       Json // Example: { "Happy": 2, "Anxious": 1 }
+  lessonsLearned String?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   learnings      Learning[]
@@ -56,8 +56,8 @@ model Learning {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  dailyReflection DailyReflection @relation(fields: [dailyReflectionId], references: [id], onDelete: Cascade)
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyReflection DailyReflection @relation(fields: [dailyReflectionId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([dailyReflectionId])

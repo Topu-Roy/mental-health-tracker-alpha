@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useDailyReflection, useReflections } from "@/hooks/useReflection";
+import { useDailyReflectionQuery, useReflectionsQuery } from "@/hooks/useReflection";
 import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { ReflectionWizard } from "@/components/ReflectionWizard";
@@ -11,14 +11,13 @@ import { Flame, HeartHandshake, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { data: todayReflection } = useDailyReflection({ date: new Date() });
-  const { data: reflections = [] } = useReflections();
+  const { data: todayReflection } = useDailyReflectionQuery({ date: new Date() });
+  const { data: reflections = [] } = useReflectionsQuery();
   const [isReflecting, setIsReflecting] = useState(false);
   const [sosMode, setSosMode] = useState<"burn" | "lessons" | null>(null);
 
   const lastReflection = reflections[0]; // Ordered by date desc
-  const currentMood = todayReflection?.overallMood || lastReflection?.overallMood;
-
+  const currentMood = todayReflection?.overallMood ?? lastReflection?.overallMood;
   const isSad = currentMood === "Bad" || currentMood === "Awful";
 
   return (

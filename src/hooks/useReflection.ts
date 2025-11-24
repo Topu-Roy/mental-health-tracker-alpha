@@ -4,14 +4,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { createDailyReflection, getDailyReflection, getReflections } from "@/action/reflection";
 import { queryClient } from "@/provider/tanstack-query/provider";
 
-export function useReflections() {
+export function useReflectionsQuery() {
   return useQuery({
     queryKey: ["reflections"],
     queryFn: () => getReflections(),
   });
 }
 
-export function useDailyReflection({ date }: { date: Date }) {
+export function useDailyReflectionQuery({ date }: { date: Date }) {
   return useQuery({
     // eslint-disable-next-line @tanstack/query/exhaustive-deps
     queryKey: ["dailyReflection", `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`],
@@ -19,7 +19,7 @@ export function useDailyReflection({ date }: { date: Date }) {
   });
 }
 
-export function useCreateDailyReflection({ date }: { date: Date }) {
+export function useCreateDailyReflectionMutation({ date }: { date: Date }) {
   return useMutation({
     mutationFn: createDailyReflection,
     onSuccess: () => {

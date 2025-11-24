@@ -1,20 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
-import { useReflections } from "@/hooks/useReflection";
+import { useState } from "react";
+import { useReflectionsQuery } from "@/hooks/useReflection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Sparkles, X, Quote, Calendar } from "lucide-react";
 import { DailyReflection } from "@/generated/prisma/client";
-// import { DailyReflection, Emotion } from "@/types/journal"; // Types are now from Prisma or inferred
 
 export function PerspectiveShifter() {
-  const { data: reflections = [] } = useReflections();
+  const { data: reflections = [] } = useReflectionsQuery();
   const [isOpen, setIsOpen] = useState(false);
-  const [memory, setMemory] = useState<DailyReflection | null>(null); // Using any for now to ease migration
+  const [memory, setMemory] = useState<DailyReflection | null>(null);
 
   const getHappyMemory = () => {
-    // Define "Good" moods
     const goodMoods = ["Great", "Good", "Happy", "Excited", "Grateful", "Proud", "Hopeful", "Relaxed"];
 
     const happyReflections = reflections.filter(
@@ -59,7 +57,7 @@ export function PerspectiveShifter() {
 
   const getMemoryContent = (mem: DailyReflection) => {
     if (mem.lessonsLearned) return mem.lessonsLearned;
-    if (mem.lessonsLearned && mem.lessonsLearned.length > 0) return mem.lessonsLearned[0].content;
+    if (mem.lessonsLearned && mem.lessonsLearned.length > 0) return mem.lessonsLearned[0];
     return "I had a really good day today.";
   };
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useJournalEntries } from "@/hooks/useJournal";
-import { useReflections, useDailyReflection } from "@/hooks/useReflection";
+import { useJournalEntriesQuery } from "@/hooks/useJournal";
+import { useReflectionsQuery, useDailyReflectionQuery } from "@/hooks/useReflection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Moon, Calendar, Flame } from "lucide-react";
@@ -13,14 +13,9 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onStartReflection }: DashboardProps) {
-  const { data: entries = [] } = useJournalEntries();
-  const { data: reflections = [] } = useReflections();
-  const { data: todayReflection } = useDailyReflection({ date: new Date() });
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const { data: entries = [] } = useJournalEntriesQuery();
+  const { data: reflections = [] } = useReflectionsQuery();
+  const { data: todayReflection } = useDailyReflectionQuery({ date: new Date() });
 
   const todayEntries = entries.filter(
     (e) => new Date(e.createdAt).toDateString() === new Date().toDateString()
@@ -76,60 +71,6 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
     return "h-4 w-4";
   };
 
-  if (!mounted) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today&apos;s Entries</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Journal entries created today</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Mood</CardTitle>
-            <Moon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">—</div>
-            <p className="text-xs text-muted-foreground">Last recorded mood</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reflection Streak</CardTitle>
-            <Flame className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground mb-4">Total days reflected</p>
-            <Link href="/history" className="w-full block">
-              <Button variant="outline" size="sm" className="w-full">
-                View History
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-        <Card className="bg-primary text-primary-foreground">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-primary-foreground/90">Daily Reflection</CardTitle>
-            <Calendar className="h-4 w-4 text-primary-foreground/90" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">Pending</div>
-            <Button variant="secondary" className="w-full mt-4" onClick={onStartReflection}>
-              Start Reflection
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
       <Card>
@@ -138,9 +79,7 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
           <BookOpen className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" suppressHydrationWarning>
-            {todayEntries.length}
-          </div>
+          <div className="text-2xl font-bold">{todayEntries.length}</div>
           <p className="text-xs text-muted-foreground">Journal entries created today</p>
         </CardContent>
       </Card>
@@ -151,10 +90,10 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
           <Moon className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" suppressHydrationWarning>
-            {todayReflection?.overallMood || lastReflection?.overallMood || "—"}
+          <div className="text-2xl font-bold">
+            {todayReflection?.overallMood ?? lastReflection?.overallMood ?? "—"}
           </div>
-          <p className="text-xs text-muted-foreground" suppressHydrationWarning>
+          <p className="text-xs text-muted-foreground">
             {todayReflection ? "Recorded today" : "Last recorded mood"}
           </p>
         </CardContent>
@@ -170,9 +109,7 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" suppressHydrationWarning>
-            {streak}
-          </div>
+          <div className="text-2xl font-bold">{streak}</div>
           <p className="text-xs text-muted-foreground mb-4">Total days reflected</p>
           <Link href="/history" className="w-full block">
             <Button variant="outline" size="sm" className="w-full">
@@ -188,15 +125,8 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
           <Calendar className="h-4 w-4 text-primary-foreground/90" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold" suppressHydrationWarning>
-            {todayReflection ? "Completed" : "Pending"}
-          </div>
-          <Button
-            variant="secondary"
-            className="w-full mt-4"
-            onClick={onStartReflection}
-            suppressHydrationWarning
-          >
+          <div className="text-2xl font-bold">{todayReflection ? "Completed" : "Pending"}</div>
+          <Button variant="secondary" className="w-full mt-4" onClick={onStartReflection}>
             {todayReflection ? "View Summary" : "Start Reflection"}
           </Button>
         </CardContent>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useReflections } from "@/hooks/useReflection";
+import { useReflectionsQuery } from "@/hooks/useReflection";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ const MOOD_ICONS: Record<string, React.ReactNode> = {
 
 export default function HistoryDetailPage() {
   const { id } = useParams();
-  const { data: reflections = [] } = useReflections();
+  const { data: reflections = [] } = useReflectionsQuery();
   const router = useRouter();
 
   const reflection = reflections.find((r) => r.id === id);
@@ -34,7 +34,7 @@ export default function HistoryDetailPage() {
   }
 
   const emotions = reflection.emotions as Record<string, number>;
-  const emotionEntries = Object.entries(emotions).filter(([_, count]) => count > 0);
+  const emotionEntries = Object.entries(emotions).filter(([, count]) => count > 0);
 
   return (
     <div className="min-h-screen bg-background p-8">

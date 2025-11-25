@@ -2,15 +2,15 @@
 
 import React, { useState } from "react";
 import {
-  useJournalEntries,
-  useCreateJournalEntry,
-  useDeleteJournalEntry,
-  useUpdateJournalEntry,
+  useJournalEntriesQuery,
+  useCreateJournalEntryMutation,
+  useDeleteJournalEntryMutation,
+  useUpdateJournalEntryMutation,
 } from "@/hooks/useJournal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Trash2, Edit2, X, Check, Smile, Frown, Meh, ThumbsUp, Heart } from "lucide-react";
+import { Send, Trash2, Edit2, X, Check, Frown, Meh, ThumbsUp, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Mood = "Great" | "Good" | "Okay" | "Bad" | "Awful";
@@ -24,10 +24,10 @@ const MOODS: { value: Mood; icon: React.ElementType; label: string; color: strin
 ];
 
 export function JournalList() {
-  const { data: entries = [] } = useJournalEntries();
-  const createEntry = useCreateJournalEntry();
-  const deleteEntry = useDeleteJournalEntry();
-  const updateEntry = useUpdateJournalEntry();
+  const { data: entries = [] } = useJournalEntriesQuery();
+  const createEntry = useCreateJournalEntryMutation();
+  const deleteEntry = useDeleteJournalEntryMutation();
+  const updateEntry = useUpdateJournalEntryMutation();
 
   const [mounted, setMounted] = useState(false);
   const [newEntry, setNewEntry] = useState("");

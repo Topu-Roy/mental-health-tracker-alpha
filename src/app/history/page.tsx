@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useReflections } from "@/hooks/useReflection";
+import { useReflectionsQuery } from "@/hooks/useReflection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ const MOOD_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function HistoryPage() {
-  const { data: reflections = [] } = useReflections();
+  const { data: reflections = [] } = useReflectionsQuery();
 
   // Sort reflections by date descending (already sorted by server, but good to ensure)
   const sortedReflections = [...reflections].sort(
@@ -40,8 +40,7 @@ export default function HistoryPage() {
           ) : (
             sortedReflections.map((reflection) => {
               const emotions = reflection.emotions as Record<string, number>;
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const emotionEntries = Object.entries(emotions).filter(([_, count]) => count > 0);
+              const emotionEntries = Object.entries(emotions).filter(([, count]) => count > 0);
 
               return (
                 <Card key={reflection.id} className="relative">

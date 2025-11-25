@@ -32,12 +32,23 @@ type Emotion =
   | "Angry"
   | "Tired"
   | "Frustrated"
-  | "Proud";
+  | "Proud"
+  | "Grateful"
+  | "Confused"
+  | "Hopeful";
 
 interface ReflectionWizardProps {
   onComplete: () => void;
   onCancel: () => void;
 }
+
+const MOODS: { label: Mood; icon: React.ReactNode }[] = [
+  { label: "Great", icon: <Heart className="w-5 h-5" /> },
+  { label: "Good", icon: <ThumbsUp className="w-5 h-5" /> },
+  { label: "Okay", icon: <Coffee className="w-5 h-5" /> },
+  { label: "Bad", icon: <Frown className="w-5 h-5" /> },
+  { label: "Awful", icon: <AlertCircle className="w-5 h-5" /> },
+];
 
 const EMOTIONS: { label: Emotion; icon: React.ReactNode }[] = [
   { label: "Happy", icon: <Smile className="w-5 h-5" /> },
@@ -97,6 +108,9 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
     Tired: 0,
     Frustrated: 0,
     Proud: 0,
+    Grateful: 0,
+    Confused: 0,
+    Hopeful: 0,
   });
 
   const [learned, setLearned] = useState(todayReflection?.lessonsLearned ?? "");
@@ -105,7 +119,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
 
   const handleNext = () => {
     if (step === 1 && generalMood) {
-      const negativeMoods = ["Sad", "Anxious", "Angry", "Frustrated", "Confused", "Tired"];
+      const negativeMoods: Mood[] = ["Bad", "Awful"];
       if (negativeMoods.includes(generalMood)) {
         setShowSOS(true);
         return;
@@ -121,7 +135,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
 
   const handleBack = () => setStep((prev) => prev - 1);
 
-  const handleTally = (emotion: string, delta: number) => {
+  const handleTally = (emotion: Emotion, delta: number) => {
     setEmotionTallies((prev) => ({
       ...prev,
       [emotion]: Math.max(0, prev[emotion] + delta),
@@ -138,7 +152,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
     });
 
     // Check for positive mood to trigger confetti
-    const positiveMoods = ["Happy", "Excited", "Grateful", "Relaxed", "Proud", "Hopeful"];
+    const positiveMoods: Mood[] = ["Great", "Good"];
     if (positiveMoods.includes(generalMood)) {
       const duration = 3000;
       const animationEnd = Date.now() + duration;
@@ -204,7 +218,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
                   <div className="space-y-4">
                     <Label className="text-lg">What was your general mood?</Label>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                      {EMOTIONS.map(({ label, icon }) => (
+                      {MOODS.map(({ label, icon }) => (
                         <Button
                           key={label}
                           variant={generalMood === label ? "default" : "outline"}
@@ -303,7 +317,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
                     <span className="text-muted-foreground block mb-2">Top Emotions:</span>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(emotionTallies)
-                        .filter(([_, c]) => c > 0)
+                        .filter(([, c]) => c > 0)
                         .map(([e, c]) => (
                           <span key={e} className="px-2 py-1 bg-secondary rounded-md text-xs font-medium">
                             {e}: {c}

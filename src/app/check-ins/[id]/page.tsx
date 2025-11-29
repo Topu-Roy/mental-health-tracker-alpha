@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useReflectionsQuery } from "@/hooks/useReflection";
+import { useCheckInsQuery } from "@/hooks/useCheckIn";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,43 +17,43 @@ const MOOD_ICONS: Record<string, React.ReactNode> = {
   Awful: <AlertCircle className="w-4 h-4 text-red-500" />,
 };
 
-export default function HistoryDetailPage() {
+export default function CheckInDetailPage() {
   const { id } = useParams();
-  const { data: reflections = [] } = useReflectionsQuery();
+  const { data: checkIns = [] } = useCheckInsQuery();
   const router = useRouter();
 
-  const reflection = reflections.find((r) => r.id === id);
+  const checkIn = checkIns.find((r) => r.id === id);
 
-  if (!reflection) {
+  if (!checkIn) {
     return (
       <div className="min-h-screen bg-background p-8 flex flex-col items-center justify-center space-y-4">
-        <h1 className="text-2xl font-bold">Reflection not found</h1>
-        <Button onClick={() => router.push("/history")}>Back to History</Button>
+        <h1 className="text-2xl font-bold">Check-in not found</h1>
+        <Button onClick={() => router.push("/check-ins")}>Back to Check-Ins</Button>
       </div>
     );
   }
 
-  const emotions = reflection.emotions as Record<string, number>;
+  const emotions = checkIn.emotions as Record<string, number>;
   const emotionEntries = Object.entries(emotions).filter(([, count]) => count > 0);
 
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-3xl mx-auto space-y-8">
         <header className="flex items-center gap-4 mb-8">
-          <Link href="/history">
+          <Link href="/check-ins">
             <Button variant="ghost" size="icon">
               <ArrowLeft className="h-6 w-6" />
             </Button>
           </Link>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              {new Date(reflection.date).toLocaleDateString("en-US", {
+              {new Date(checkIn.date).toLocaleDateString("en-US", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
               })}
             </h1>
-            <p className="text-muted-foreground">Daily Reflection Details</p>
+            <p className="text-muted-foreground">Daily Check-In Details</p>
           </div>
         </header>
 
@@ -66,8 +66,8 @@ export default function HistoryDetailPage() {
               <div className="flex flex-col space-y-2">
                 <span className="text-sm text-muted-foreground">General Mood</span>
                 <div className="flex items-center gap-2 text-lg font-medium">
-                  {MOOD_ICONS[reflection.overallMood] || <Smile className="w-4 h-4" />}
-                  <span>{reflection.overallMood}</span>
+                  {MOOD_ICONS[checkIn.overallMood] || <Smile className="w-4 h-4" />}
+                  <span>{checkIn.overallMood}</span>
                 </div>
               </div>
               {/* Overall Assessment removed */}
@@ -100,9 +100,7 @@ export default function HistoryDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="whitespace-pre-wrap leading-relaxed">
-                  {reflection.lessonsLearned || (
-                    <span className="text-muted-foreground italic">No entry.</span>
-                  )}
+                  {checkIn.lessonsLearned || <span className="text-muted-foreground italic">No entry.</span>}
                 </p>
               </CardContent>
             </Card>
@@ -113,9 +111,9 @@ export default function HistoryDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {reflection.learnings && reflection.learnings.length > 0 ? (
+                  {checkIn.learnings && checkIn.learnings.length > 0 ? (
                     <ul className="list-disc pl-5 space-y-1">
-                      {reflection.learnings.map((l, i: number) => (
+                      {checkIn.learnings.map((l, i: number) => (
                         <li key={i} className="leading-relaxed">
                           {l.content}
                         </li>

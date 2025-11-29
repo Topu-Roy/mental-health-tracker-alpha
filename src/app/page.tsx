@@ -1,23 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { useDailyReflectionQuery, useReflectionsQuery } from "@/hooks/useReflection";
+import { useDailyCheckInQuery, useCheckInsQuery } from "@/hooks/useCheckIn";
 import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
-import { ReflectionWizard } from "@/components/ReflectionWizard";
+import { DailyCheckIn } from "@/components/DailyCheckIn";
 import { SOSPanel } from "@/components/SOSPanel";
 import { PerspectiveShifter } from "@/components/PerspectiveShifter";
 import { Flame, HeartHandshake, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { data: todayReflection } = useDailyReflectionQuery({ date: new Date() });
-  const { data: reflections = [] } = useReflectionsQuery();
-  const [isReflecting, setIsReflecting] = useState(false);
+  const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
+  const { data: checkIns = [] } = useCheckInsQuery();
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [sosMode, setSosMode] = useState<"burn" | "lessons" | null>(null);
 
-  const lastReflection = reflections[0]; // Ordered by date desc
-  const currentMood = todayReflection?.overallMood ?? lastReflection?.overallMood;
+  const lastCheckIn = checkIns[0]; // Ordered by date desc
+  const currentMood = todayCheckIn?.overallMood ?? lastCheckIn?.overallMood;
   const isSad = currentMood === "Bad" || currentMood === "Awful";
 
   return (
@@ -46,7 +46,7 @@ export default function Home() {
             )}
             <PerspectiveShifter />
           </div>
-          <Dashboard onStartReflection={() => setIsReflecting(true)} />
+          <Dashboard onStartReflection={() => setIsCheckingIn(true)} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[600px]">
@@ -56,8 +56,8 @@ export default function Home() {
         </div>
       </div>
 
-      {isReflecting && (
-        <ReflectionWizard onComplete={() => setIsReflecting(false)} onCancel={() => setIsReflecting(false)} />
+      {isCheckingIn && (
+        <DailyCheckIn onComplete={() => setIsCheckingIn(false)} onCancel={() => setIsCheckingIn(false)} />
       )}
 
       {sosMode && (

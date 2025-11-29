@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useReflectionsQuery } from "@/hooks/useReflection";
+import { useCheckInsQuery } from "@/hooks/useCheckIn";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,11 @@ const MOOD_ICONS: Record<string, React.ReactNode> = {
   Awful: <AlertCircle className="w-4 h-4 text-red-500" />,
 };
 
-export default function HistoryPage() {
-  const { data: reflections = [] } = useReflectionsQuery();
+export default function CheckInsPage() {
+  const { data: checkIns = [] } = useCheckInsQuery();
 
-  // Sort reflections by date descending (already sorted by server, but good to ensure)
-  const sortedReflections = [...reflections].sort(
+  // Sort check-ins by date descending (already sorted by server, but good to ensure)
+  const sortedCheckIns = [...checkIns].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
@@ -29,33 +29,33 @@ export default function HistoryPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         <header className="mb-8 pt-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reflection History</h1>
-            <p className="text-muted-foreground">A look back at your daily reflections.</p>
+            <h1 className="text-3xl font-bold tracking-tight">My Check-Ins</h1>
+            <p className="text-muted-foreground">A look back at your daily check-ins.</p>
           </div>
         </header>
 
         <div className="space-y-6">
-          {sortedReflections.length === 0 ? (
-            <div className="text-center text-muted-foreground py-10">No reflections recorded yet.</div>
+          {sortedCheckIns.length === 0 ? (
+            <div className="text-center text-muted-foreground py-10">No check-ins recorded yet.</div>
           ) : (
-            sortedReflections.map((reflection) => {
-              const emotions = reflection.emotions as Record<string, number>;
+            sortedCheckIns.map((checkIn) => {
+              const emotions = checkIn.emotions as Record<string, number>;
               const emotionEntries = Object.entries(emotions).filter(([, count]) => count > 0);
 
               return (
-                <Card key={reflection.id} className="relative">
+                <Card key={checkIn.id} className="relative">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">
-                        {new Date(reflection.date).toLocaleDateString("en-US", {
+                        {new Date(checkIn.date).toLocaleDateString("en-US", {
                           weekday: "long",
                           month: "long",
                           day: "numeric",
                         })}
                       </CardTitle>
                       <div className="flex items-center gap-2 px-2 py-1 bg-secondary rounded-full text-xs font-medium">
-                        {MOOD_ICONS[reflection.overallMood] || <Smile className="w-4 h-4" />}
-                        <span>{reflection.overallMood}</span>
+                        {MOOD_ICONS[checkIn.overallMood] || <Smile className="w-4 h-4" />}
+                        <span>{checkIn.overallMood}</span>
                       </div>
                     </div>
                   </CardHeader>
@@ -80,7 +80,7 @@ export default function HistoryPage() {
                       </div>
                     )}
 
-                    <Link href={`/history/${reflection.id}`} className="block mt-4">
+                    <Link href={`/check-ins/${checkIn.id}` as any} className="block mt-4">
                       <Button variant="outline" size="sm" className="w-full">
                         View Details
                       </Button>

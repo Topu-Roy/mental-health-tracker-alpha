@@ -4,28 +4,28 @@ import { db } from "@/server/db";
 import { getServerAuthSession } from "@/lib/auth";
 import { z } from "zod";
 
-const createDailyReflectionSchema = z.object({
+const createDailyCheckInSchema = z.object({
   overallMood: z.enum(["Great", "Good", "Okay", "Bad", "Awful"]),
   emotions: z.record(z.string(), z.number()), // e.g., { "Happy": 2, "Anxious": 1 }
   lessonsLearned: z.string().optional(),
   learnings: z.array(z.string()).optional(),
 });
 
-export async function createDailyReflection(input: z.infer<typeof createDailyReflectionSchema>) {
+export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckInSchema>) {
   const session = await getServerAuthSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
 
-  const { overallMood, emotions, lessonsLearned, learnings } = createDailyReflectionSchema.parse(input);
+  const { overallMood, emotions, lessonsLearned, learnings } = createDailyCheckInSchema.parse(input);
 
-  // Check if reflection already exists for today
+  // Check if check-in already exists for today
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const existingReflection = await db.dailyReflection.findFirst({
+  const existingCheckIn = await db.dailyReflection.findFirst({
     where: {
       userId: session.user.id,
       date: {
@@ -35,11 +35,11 @@ export async function createDailyReflection(input: z.infer<typeof createDailyRef
     },
   });
 
-  if (existingReflection) {
-    throw new Error("Reflection already exists for today");
+  if (existingCheckIn) {
+    throw new Error("Check-in already exists for today");
   }
 
-  const reflection = await db.dailyReflection.create({
+  const checkIn = await db.dailyReflection.create({
     data: {
       overallMood,
       emotions,
@@ -60,10 +60,10 @@ export async function createDailyReflection(input: z.infer<typeof createDailyRef
     },
   });
 
-  return reflection;
+  return checkIn;
 }
 
-export async function getDailyReflection(date: Date) {
+export async function getDailyCheckIn(date: Date) {
   const session = await getServerAuthSession();
   if (!session) {
     throw new Error("Unauthorized");
@@ -74,7 +74,7 @@ export async function getDailyReflection(date: Date) {
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
 
-  const reflection = await db.dailyReflection.findFirst({
+  const checkIn = await db.dailyReflection.findFirst({
     where: {
       userId: session.user.id,
       date: {
@@ -87,16 +87,16 @@ export async function getDailyReflection(date: Date) {
     },
   });
 
-  return reflection;
+  return checkIn;
 }
 
-export async function getReflections() {
+export async function getCheckIns() {
   const session = await getServerAuthSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
 
-  const reflections = await db.dailyReflection.findMany({
+  const checkIns = await db.dailyReflection.findMany({
     where: {
       userId: session.user.id,
     },
@@ -108,5 +108,5 @@ export async function getReflections() {
     },
   });
 
-  return reflections;
+  return checkIns;
 }

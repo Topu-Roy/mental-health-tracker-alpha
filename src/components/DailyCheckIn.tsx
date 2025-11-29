@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
-import { useCreateDailyReflectionMutation, useDailyReflectionQuery } from "@/hooks/useReflection";
 import { Button } from "@/components/ui/button";
 import { SOSPanel } from "@/components/SOSPanel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -21,6 +20,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import type { Mood } from "@/generated/prisma/enums";
+import { useCreateDailyCheckInMutation, useDailyCheckInQuery } from "@/hooks/useCheckIn";
 
 // Define Emotion type locally or import from a shared types file if available
 type Emotion =
@@ -37,7 +37,7 @@ type Emotion =
   | "Confused"
   | "Hopeful";
 
-interface ReflectionWizardProps {
+interface DailyCheckInProps {
   onComplete: () => void;
   onCancel: () => void;
 }
@@ -82,11 +82,11 @@ function MoonIcon({ className }: { className?: string }) {
   );
 }
 
-export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps) {
-  const { mutate: saveReflection } = useCreateDailyReflectionMutation({ date: new Date() });
-  const { data: todayReflection } = useDailyReflectionQuery({ date: new Date() });
+export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
+  const { mutate: saveCheckIn } = useCreateDailyCheckInMutation({ date: new Date() });
+  const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
 
-  const [step, setStep] = useState(todayReflection ? 4 : 1);
+  const [step, setStep] = useState(todayCheckIn ? 4 : 1);
   const [showSOS, setShowSOS] = useState(false);
 
   // Map fields: overallAssessment is not in Prisma schema, so we might drop it or map it to something else.
@@ -96,7 +96,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
   // For now, I'll ignore saving it to DB to stick to the schema provided.
   const [assessment, setAssessment] = useState<number>(5);
 
-  const [generalMood, setGeneralMood] = useState<Mood | null>(todayReflection?.overallMood ?? null);
+  const [generalMood, setGeneralMood] = useState<Mood | null>(todayCheckIn?.overallMood ?? null);
 
   const [emotionTallies, setEmotionTallies] = useState<Record<Emotion, number>>({
     Happy: 0,
@@ -113,9 +113,9 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
     Hopeful: 0,
   });
 
-  const [learned, setLearned] = useState(todayReflection?.lessonsLearned ?? "");
+  const [learned, setLearned] = useState(todayCheckIn?.lessonsLearned ?? "");
   // Map learnings array to string for editing
-  const [lessons, setLessons] = useState(todayReflection?.learnings?.map((l) => l.content).join("\n") ?? "");
+  const [lessons, setLessons] = useState(todayCheckIn?.learnings?.map((l) => l.content).join("\n") ?? "");
 
   const handleNext = () => {
     if (step === 1 && generalMood) {
@@ -181,7 +181,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
       }, 250);
     }
 
-    saveReflection({
+    saveCheckIn({
       overallMood: generalMood,
       emotions: emotionsToSave,
       lessonsLearned: learned,
@@ -194,7 +194,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-2">
         <CardHeader>
-          <CardTitle>End of Day Reflection</CardTitle>
+          <CardTitle>Daily Check-In</CardTitle>
           <CardDescription>Step {step} of 4</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -349,7 +349,7 @@ export function ReflectionWizard({ onComplete, onCancel }: ReflectionWizardProps
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSubmit}>Complete Reflection</Button>
+              <Button onClick={handleSubmit}>Complete Check-In</Button>
             )}
           </CardFooter>
         )}

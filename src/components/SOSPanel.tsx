@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useReflectionsQuery } from "@/hooks/useReflection";
+import { useCheckInsQuery } from "@/hooks/useCheckIn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +13,7 @@ interface SOSPanelProps {
 }
 
 export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
-  const { data: reflections = [] } = useReflectionsQuery();
+  const { data: checkIns = [] } = useCheckInsQuery();
   const [lessons, setLessons] = useState<string[]>([]);
   const [burnText, setBurnText] = useState("");
   const [isBurning, setIsBurning] = useState(false);
@@ -22,15 +22,15 @@ export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
 
   useEffect(() => {
     if (hasLoadedLessons.current) return;
-    if (reflections.length === 0) return;
+    if (checkIns.length === 0) return;
 
-    const allLessons = reflections.flatMap((r) => {
+    const allLessons = checkIns.flatMap((r) => {
       const list: string[] = [];
       if (r.lessonsLearned && r.lessonsLearned.trim().length > 0) {
         list.push(r.lessonsLearned);
       }
       if (r.learnings && Array.isArray(r.learnings)) {
-        r.learnings.forEach((l: any) => {
+        r.learnings.forEach((l: { content: string }) => {
           if (l.content && l.content.trim().length > 0) {
             list.push(l.content);
           }
@@ -46,7 +46,7 @@ export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
       setLessons(shuffled.slice(0, 3));
       hasLoadedLessons.current = true;
     }
-  }, [reflections]);
+  }, [checkIns]);
 
   const handleBurn = () => {
     if (!burnText.trim()) return;

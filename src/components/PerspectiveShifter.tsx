@@ -1,32 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { useReflectionsQuery } from "@/hooks/useReflection";
+import { useCheckInsQuery } from "@/hooks/useCheckIn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Sparkles, X, Quote, Calendar } from "lucide-react";
 import { DailyReflection } from "@/generated/prisma/client";
 
 export function PerspectiveShifter() {
-  const { data: reflections = [] } = useReflectionsQuery();
+  const { data: checkIns = [] } = useCheckInsQuery();
   const [isOpen, setIsOpen] = useState(false);
   const [memory, setMemory] = useState<DailyReflection | null>(null);
 
   const getHappyMemory = () => {
     const goodMoods = ["Great", "Good", "Happy", "Excited", "Grateful", "Proud", "Hopeful", "Relaxed"];
 
-    const happyReflections = reflections.filter(
+    const happyCheckIns = checkIns.filter(
       (r) =>
         goodMoods.includes(r.overallMood) && (r.lessonsLearned || (r.learnings && r.learnings.length > 0))
     );
 
-    if (happyReflections.length === 0) {
+    if (happyCheckIns.length === 0) {
       // Fallback if no specific happy memories found yet
       return null;
     }
 
-    const randomIndex = Math.floor(Math.random() * happyReflections.length);
-    return happyReflections[randomIndex];
+    const randomIndex = Math.floor(Math.random() * happyCheckIns.length);
+    return happyCheckIns[randomIndex];
   };
 
   const handleOpen = () => {

@@ -25,9 +25,9 @@ export function Navbar() {
                 Journal
               </Button>
             </Link>
-            <Link href="/history">
+            <Link href="/check-ins">
               <Button
-                variant={pathname.startsWith("/history") ? "default" : "ghost"}
+                variant={pathname.startsWith("/check-ins") ? "default" : "ghost"}
                 size="sm"
                 className="gap-2"
               >

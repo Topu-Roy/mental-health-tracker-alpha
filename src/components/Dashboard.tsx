@@ -2,11 +2,11 @@
 
 import React from "react";
 import { useJournalEntriesQuery } from "@/hooks/useJournal";
-import { useReflectionsQuery, useDailyReflectionQuery } from "@/hooks/useReflection";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Moon, Calendar, Flame } from "lucide-react";
 import Link from "next/link";
+import { useCheckInsQuery, useDailyCheckInQuery } from "@/hooks/useCheckIn";
 
 interface DashboardProps {
   onStartReflection: () => void;
@@ -14,23 +14,23 @@ interface DashboardProps {
 
 export function Dashboard({ onStartReflection }: DashboardProps) {
   const { data: entries = [] } = useJournalEntriesQuery();
-  const { data: reflections = [] } = useReflectionsQuery();
-  const { data: todayReflection } = useDailyReflectionQuery({ date: new Date() });
+  const { data: checkIns = [] } = useCheckInsQuery();
+  const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
 
   const todayEntries = entries.filter(
     (e) => new Date(e.createdAt).toDateString() === new Date().toDateString()
   );
 
-  const lastReflection = reflections[0]; // Reflections are ordered by date desc in the action
+  const lastCheckIn = checkIns[0]; // Check-ins are ordered by date desc in the action
 
   const streak = React.useMemo(() => {
-    if (!reflections.length) return 0;
+    if (!checkIns.length) return 0;
 
-    // Reflections are already sorted by date desc from the server
-    const sortedReflections = [...reflections];
+    // Check-ins are already sorted by date desc from the server
+    const sortedCheckIns = [...checkIns];
 
     const uniqueDates = Array.from(
-      new Set(sortedReflections.map((r) => new Date(r.date).toISOString().split("T")[0]))
+      new Set(sortedCheckIns.map((r) => new Date(r.date).toISOString().split("T")[0]))
     );
 
     if (uniqueDates.length === 0) return 0;
@@ -57,7 +57,7 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
       }
     }
     return streak;
-  }, [reflections]);
+  }, [checkIns]);
 
   const getFlameColor = (streak: number) => {
     if (streak >= 7) return "text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]";
@@ -91,17 +91,17 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {todayReflection?.overallMood ?? lastReflection?.overallMood ?? "—"}
+            {todayCheckIn?.overallMood ?? lastCheckIn?.overallMood ?? "—"}
           </div>
           <p className="text-xs text-muted-foreground">
-            {todayReflection ? "Recorded today" : "Last recorded mood"}
+            {todayCheckIn ? "Recorded today" : "Last recorded mood"}
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Reflection Streak</CardTitle>
+          <CardTitle className="text-sm font-medium">Check-In Streak</CardTitle>
           <div className={`${streak > 0 ? getFlameColor(streak) : "text-muted-foreground"}`}>
             <Flame
               className={`${streak > 0 ? getFlameSize(streak) : "h-4 w-4"} transition-all duration-300`}
@@ -110,10 +110,10 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{streak}</div>
-          <p className="text-xs text-muted-foreground mb-4">Total days reflected</p>
-          <Link href="/history" className="w-full block">
+          <p className="text-xs text-muted-foreground mb-4">Total days checked in</p>
+          <Link href={"/check-ins" as any} className="w-full block">
             <Button variant="outline" size="sm" className="w-full">
-              View History
+              View Check-Ins
             </Button>
           </Link>
         </CardContent>
@@ -121,13 +121,13 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
 
       <Card className="bg-primary text-primary-foreground">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-primary-foreground/90">Daily Reflection</CardTitle>
+          <CardTitle className="text-sm font-medium text-primary-foreground/90">Daily Check-In</CardTitle>
           <Calendar className="h-4 w-4 text-primary-foreground/90" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{todayReflection ? "Completed" : "Pending"}</div>
+          <div className="text-2xl font-bold">{todayCheckIn ? "Completed" : "Pending"}</div>
           <Button variant="secondary" className="w-full mt-4" onClick={onStartReflection}>
-            {todayReflection ? "View Summary" : "Start Reflection"}
+            {todayCheckIn ? "View Summary" : "Start Check-In"}
           </Button>
         </CardContent>
       </Card>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { createDailyCheckIn, getDailyCheckIn, getCheckIns } from "@/action/checkIn";
+import { createDailyCheckIn, getDailyCheckIn, getCheckIns, updateDailyCheckIn } from "@/action/checkIn";
 import { queryClient } from "@/provider/tanstack-query/provider";
 
 export function useCheckInsQuery() {
@@ -22,6 +22,18 @@ export function useDailyCheckInQuery({ date }: { date: Date }) {
 export function useCreateDailyCheckInMutation({ date }: { date: Date }) {
   return useMutation({
     mutationFn: createDailyCheckIn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["dailyCheckIn", `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`],
+      });
+      queryClient.invalidateQueries({ queryKey: ["checkIns"] });
+    },
+  });
+}
+
+export function useUpdateDailyCheckInMutation({ date }: { date: Date }) {
+  return useMutation({
+    mutationFn: updateDailyCheckIn,
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["dailyCheckIn", `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`],

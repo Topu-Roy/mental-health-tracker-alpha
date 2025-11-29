@@ -18,9 +18,14 @@ import {
   Coffee,
   AlertCircle,
   CheckCircle2,
+  Edit2,
 } from "lucide-react";
 import type { Mood } from "@/generated/prisma/enums";
-import { useCreateDailyCheckInMutation, useDailyCheckInQuery } from "@/hooks/useCheckIn";
+import {
+  useCreateDailyCheckInMutation,
+  useDailyCheckInQuery,
+  useUpdateDailyCheckInMutation,
+} from "@/hooks/useCheckIn";
 
 // Define Emotion type locally or import from a shared types file if available
 type Emotion =
@@ -84,37 +89,49 @@ function MoonIcon({ className }: { className?: string }) {
 
 export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
   const { mutate: saveCheckIn } = useCreateDailyCheckInMutation({ date: new Date() });
+  const { mutate: updateCheckIn } = useUpdateDailyCheckInMutation({ date: new Date() });
   const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
 
-  const [step, setStep] = useState(todayCheckIn ? 4 : 1);
+  const [isEditing, setIsEditing] = useState(false);
+  const [step, setStep] = useState(todayCheckIn && !isEditing ? 4 : 1);
   const [showSOS, setShowSOS] = useState(false);
 
-  // Map fields: overallAssessment is not in Prisma schema, so we might drop it or map it to something else.
-  // The Prisma schema has overallMood (enum), emotions (Json), lessonsLearned (String).
-  // It seems 'overallAssessment' (1-10) was dropped in the new schema.
-  // I will keep it in state for UI but it won't be saved unless I add it to schema or put it in emotions/metadata.
-  // For now, I'll ignore saving it to DB to stick to the schema provided.
   const [assessment, setAssessment] = useState<number>(5);
 
   const [generalMood, setGeneralMood] = useState<Mood | null>(todayCheckIn?.overallMood ?? null);
 
-  const [emotionTallies, setEmotionTallies] = useState<Record<Emotion, number>>({
-    Happy: 0,
-    Excited: 0,
-    Relaxed: 0,
-    Sad: 0,
-    Anxious: 0,
-    Angry: 0,
-    Tired: 0,
-    Frustrated: 0,
-    Proud: 0,
-    Grateful: 0,
-    Confused: 0,
-    Hopeful: 0,
-  });
+  // Initialize emotion tallies from existing check-in
+  const initializeEmotionTallies = () => {
+    const defaultTallies: Record<Emotion, number> = {
+      Happy: 0,
+      Excited: 0,
+      Relaxed: 0,
+      Sad: 0,
+      Anxious: 0,
+      Angry: 0,
+      Tired: 0,
+      Frustrated: 0,
+      Proud: 0,
+      Grateful: 0,
+      Confused: 0,
+      Hopeful: 0,
+    };
+
+    if (todayCheckIn?.emotions && typeof todayCheckIn.emotions === "object") {
+      const existing = todayCheckIn.emotions as Record<string, number>;
+      Object.keys(existing).forEach((key) => {
+        if (key in defaultTallies) {
+          defaultTallies[key as Emotion] = existing[key];
+        }
+      });
+    }
+
+    return defaultTallies;
+  };
+
+  const [emotionTallies, setEmotionTallies] = useState<Record<Emotion, number>>(initializeEmotionTallies());
 
   const [learned, setLearned] = useState(todayCheckIn?.lessonsLearned ?? "");
-  // Map learnings array to string for editing
   const [lessons, setLessons] = useState(todayCheckIn?.learnings?.map((l) => l.content).join("\n") ?? "");
 
   const handleNext = () => {
@@ -140,6 +157,11 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
       ...prev,
       [emotion]: Math.max(0, prev[emotion] + delta),
     }));
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+    setStep(1);
   };
 
   const handleSubmit = () => {
@@ -181,13 +203,30 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
       }, 250);
     }
 
-    saveCheckIn({
+    const checkInData = {
       overallMood: generalMood,
       emotions: emotionsToSave,
       lessonsLearned: learned,
       learnings: lessons.split("\n").filter((l) => l.trim().length > 0),
-    });
-    onComplete();
+    };
+
+    if (todayCheckIn && isEditing) {
+      updateCheckIn(
+        { id: todayCheckIn.id, ...checkInData },
+        {
+          onSuccess: () => {
+            setIsEditing(false);
+            setStep(4);
+          },
+        }
+      );
+    } else {
+      saveCheckIn(checkInData, {
+        onSuccess: () => {
+          setStep(4);
+        },
+      });
+    }
   };
 
   return (
@@ -301,7 +340,15 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
 
               {step === 4 && (
                 <div className="space-y-6">
-                  <h3 className="text-xl font-semibold">Summary</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold">Summary</h3>
+                    {todayCheckIn && !isEditing && (
+                      <Button variant="outline" size="sm" onClick={handleEdit} className="gap-2">
+                        <Edit2 className="h-4 w-4" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Overall:</span>
@@ -349,7 +396,13 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                 Next
               </Button>
             ) : (
-              <Button onClick={handleSubmit}>Complete Check-In</Button>
+              <>
+                {todayCheckIn && !isEditing ? (
+                  <Button onClick={onComplete}>Close</Button>
+                ) : (
+                  <Button onClick={handleSubmit}>{isEditing ? "Save Changes" : "Complete Check-In"}</Button>
+                )}
+              </>
             )}
           </CardFooter>
         )}

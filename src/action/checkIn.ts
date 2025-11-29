@@ -90,6 +90,74 @@ export async function getDailyCheckIn(date: Date) {
   return checkIn;
 }
 
+const updateDailyCheckInSchema = z.object({
+  id: z.string(),
+  overallMood: z.enum(["Great", "Good", "Okay", "Bad", "Awful"]),
+  emotions: z.record(z.string(), z.number()),
+  lessonsLearned: z.string().optional(),
+  learnings: z.array(z.string()).optional(),
+});
+
+export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckInSchema>) {
+  const session = await getServerAuthSession();
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+
+  const { id, overallMood, emotions, lessonsLearned, learnings } = updateDailyCheckInSchema.parse(input);
+
+  // Get the existing check-in
+  const existingCheckIn = await db.dailyCheckIn.findUnique({
+    where: { id },
+    include: { learnings: true },
+  });
+
+  if (!existingCheckIn) {
+    throw new Error("Check-in not found");
+  }
+
+  if (existingCheckIn.userId !== session.user.id) {
+    throw new Error("Unauthorized");
+  }
+
+  // Check if the check-in date is today
+  const checkInDate = new Date(existingCheckIn.date);
+  checkInDate.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (checkInDate.getTime() !== today.getTime()) {
+    throw new Error("Can only edit today's check-in");
+  }
+
+  // Delete existing learnings and create new ones
+  await db.checkInLearning.deleteMany({
+    where: { dailyCheckInId: id },
+  });
+
+  const updatedCheckIn = await db.dailyCheckIn.update({
+    where: { id },
+    data: {
+      overallMood,
+      emotions,
+      lessonsLearned,
+      learnings: learnings
+        ? {
+            create: learnings.map((content) => ({
+              content,
+              userId: session.user.id,
+            })),
+          }
+        : undefined,
+    },
+    include: {
+      learnings: true,
+    },
+  });
+
+  return updatedCheckIn;
+}
+
 export async function getCheckIns() {
   const session = await getServerAuthSession();
   if (!session) {

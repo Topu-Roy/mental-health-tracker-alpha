@@ -80,7 +80,7 @@ export default function CheckInsPage() {
                       </div>
                     )}
 
-                    <Link href={`/check-ins/${checkIn.id}` as any} className="block mt-4">
+                    <Link href={`/check-ins/${checkIn.id}`} className="block mt-4">
                       <Button variant="outline" size="sm" className="w-full">
                         View Details
                       </Button>

@@ -111,7 +111,7 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
         <CardContent>
           <div className="text-2xl font-bold">{streak}</div>
           <p className="text-xs text-muted-foreground mb-4">Total days checked in</p>
-          <Link href={"/check-ins" as any} className="w-full block">
+          <Link href={"/check-ins"} className="w-full block">
             <Button variant="outline" size="sm" className="w-full">
               View Check-Ins
             </Button>
@@ -127,7 +127,7 @@ export function Dashboard({ onStartReflection }: DashboardProps) {
         <CardContent>
           <div className="text-2xl font-bold">{todayCheckIn ? "Completed" : "Pending"}</div>
           <Button variant="secondary" className="w-full mt-4" onClick={onStartReflection}>
-            {todayCheckIn ? "View Summary" : "Start Check-In"}
+            {todayCheckIn ? "Review & Edit" : "Start Check-In"}
           </Button>
         </CardContent>
       </Card>

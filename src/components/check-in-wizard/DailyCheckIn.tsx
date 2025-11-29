@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
-import { SOSPanel } from "@/components/SOSPanel";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +35,6 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [step, setStep] = useState(todayCheckIn && !isEditing ? 5 : 1);
-  const [showSOS, setShowSOS] = useState(false);
 
   const [assessment, setAssessment] = useState<number>(5);
   const [generalMood, setGeneralMood] = useState<Mood | null>(todayCheckIn?.overallMood ?? null);
@@ -80,14 +78,6 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
   const [learningInput, setLearningInput] = useState("");
 
   const handleNext = () => {
-    if (step === 1 && generalMood) {
-      const negativeMoods: Mood[] = ["Bad", "Awful"];
-      if (negativeMoods.includes(generalMood)) {
-        setShowSOS(true);
-        return;
-      }
-    }
-
     if (step === 3 && memoryInput.trim()) {
       setMemories((prev) => [...prev, memoryInput.trim()]);
       setMemoryInput("");
@@ -99,11 +89,6 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
     }
 
     setStep((prev) => prev + 1);
-  };
-
-  const handleSOSComplete = () => {
-    setShowSOS(false);
-    setStep(2);
   };
 
   const handleBack = () => setStep((prev) => prev - 1);
@@ -216,87 +201,79 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
           </DialogHeader>
         </div>
         <div className="p-6 space-y-6">
-          {showSOS ? (
-            <SOSPanel onComplete={handleSOSComplete} />
-          ) : (
-            <>
-              {step === 1 && (
-                <MoodStep
-                  assessment={assessment}
-                  setAssessment={setAssessment}
-                  generalMood={generalMood}
-                  setGeneralMood={setGeneralMood}
-                />
-              )}
+          {step === 1 && (
+            <MoodStep
+              assessment={assessment}
+              setAssessment={setAssessment}
+              generalMood={generalMood}
+              setGeneralMood={setGeneralMood}
+            />
+          )}
 
-              {step === 2 && <EmotionStep emotionTallies={emotionTallies} handleTally={handleTally} />}
+          {step === 2 && <EmotionStep emotionTallies={emotionTallies} handleTally={handleTally} />}
 
-              {step === 3 && (
-                <MemoriesStep
-                  memories={memories}
-                  setMemories={setMemories}
-                  memoryInput={memoryInput}
-                  setMemoryInput={setMemoryInput}
-                  handleAddItem={handleAddItem}
-                  handleRemoveItem={handleRemoveItem}
-                />
-              )}
+          {step === 3 && (
+            <MemoriesStep
+              memories={memories}
+              setMemories={setMemories}
+              memoryInput={memoryInput}
+              setMemoryInput={setMemoryInput}
+              handleAddItem={handleAddItem}
+              handleRemoveItem={handleRemoveItem}
+            />
+          )}
 
-              {step === 4 && (
-                <LearningsStep
-                  learnings={learnings}
-                  setLearnings={setLearnings}
-                  learningInput={learningInput}
-                  setLearningInput={setLearningInput}
-                  handleAddItem={handleAddItem}
-                  handleRemoveItem={handleRemoveItem}
-                />
-              )}
+          {step === 4 && (
+            <LearningsStep
+              learnings={learnings}
+              setLearnings={setLearnings}
+              learningInput={learningInput}
+              setLearningInput={setLearningInput}
+              handleAddItem={handleAddItem}
+              handleRemoveItem={handleRemoveItem}
+            />
+          )}
 
-              {step === 5 && (
-                <SummaryStep
-                  assessment={assessment}
-                  generalMood={generalMood}
-                  todayCheckIn={todayCheckIn}
-                  emotionTallies={emotionTallies}
-                  memories={memories}
-                  learnings={learnings}
-                  isEditing={isEditing}
-                  handleEdit={handleEdit}
-                />
-              )}
-            </>
+          {step === 5 && (
+            <SummaryStep
+              assessment={assessment}
+              generalMood={generalMood}
+              todayCheckIn={todayCheckIn}
+              emotionTallies={emotionTallies}
+              memories={memories}
+              learnings={learnings}
+              isEditing={isEditing}
+              handleEdit={handleEdit}
+            />
           )}
         </div>
-        {!showSOS && (
-          <div className="p-6 border-t bg-secondary/10">
-            <DialogFooter className="flex sm:justify-between gap-2">
-              <Button variant="ghost" onClick={step === 1 ? onCancel : handleBack}>
-                {step === 1 ? "Cancel" : "Back"}
-              </Button>
+        <div className="p-6 border-t bg-secondary/10">
+          <DialogFooter className="flex sm:justify-between gap-2">
+            <Button variant="ghost" onClick={step === 1 ? onCancel : handleBack}>
+              {step === 1 ? "Cancel" : "Back"}
+            </Button>
 
-              {step < 5 ? (
-                <Button onClick={handleNext} disabled={step === 1 && !generalMood}>
-                  Next
-                </Button>
-              ) : (
-                <>
-                  {todayCheckIn && !isEditing ? (
-                    <Button onClick={onComplete}>Close</Button>
-                  ) : (
-                    <Button onClick={handleSubmit} disabled={isCreating || isUpdating}>
-                      {isCreating || isUpdating
-                        ? "Generating AI rating..."
-                        : isEditing
-                        ? "Save Changes"
-                        : "Complete Check-In"}
-                    </Button>
-                  )}
-                </>
-              )}
-            </DialogFooter>
-          </div>
-        )}
+            {step < 5 ? (
+              <Button onClick={handleNext} disabled={step === 1 && !generalMood}>
+                Next
+              </Button>
+            ) : (
+              <>
+                {todayCheckIn && !isEditing ? (
+                  <Button onClick={onComplete}>Close</Button>
+                ) : (
+                  <Button onClick={handleSubmit} disabled={isCreating || isUpdating}>
+                    {isCreating || isUpdating
+                      ? "Generating AI rating..."
+                      : isEditing
+                      ? "Save Changes"
+                      : "Complete Check-In"}
+                  </Button>
+                )}
+              </>
+            )}
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

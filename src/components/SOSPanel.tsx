@@ -1,52 +1,27 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { useCheckInsQuery } from "@/hooks/useCheckIn";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Flame, HeartHandshake, ArrowRight } from "lucide-react";
+import { Flame, Sparkles, RotateCcw } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface SOSPanelProps {
-  onComplete: () => void;
-  mode?: "full" | "burn" | "lessons";
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
-  const { data: checkIns = [] } = useCheckInsQuery();
-  const [lessons, setLessons] = useState<string[]>([]);
+export function SOSPanel({ open, onOpenChange }: SOSPanelProps) {
   const [burnText, setBurnText] = useState("");
   const [isBurning, setIsBurning] = useState(false);
   const [burned, setBurned] = useState(false);
-  const hasLoadedLessons = useRef(false);
-
-  useEffect(() => {
-    if (hasLoadedLessons.current) return;
-    if (checkIns.length === 0) return;
-
-    const allLessons = checkIns.flatMap((r) => {
-      const list: string[] = [];
-      if (r.lessonsLearned && r.lessonsLearned.trim().length > 0) {
-        list.push(r.lessonsLearned);
-      }
-      if (r.learnings && Array.isArray(r.learnings)) {
-        r.learnings.forEach((l: { content: string }) => {
-          if (l.content && l.content.trim().length > 0) {
-            list.push(l.content);
-          }
-        });
-      }
-      return list;
-    });
-
-    if (allLessons.length > 0) {
-      const shuffled = allLessons.sort(() => 0.5 - Math.random());
-
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLessons(shuffled.slice(0, 3));
-      hasLoadedLessons.current = true;
-    }
-  }, [checkIns]);
 
   const handleBurn = () => {
     if (!burnText.trim()) return;
@@ -55,91 +30,109 @@ export function SOSPanel({ onComplete, mode = "full" }: SOSPanelProps) {
       setBurned(true);
       setBurnText("");
       setIsBurning(false);
-    }, 2000); // Animation duration
+    }, 2500);
+  };
+
+  const handleReset = () => {
+    setBurned(false);
+    setBurnText("");
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+    // Reset state after dialog closes
+    setTimeout(() => {
+      setBurned(false);
+      setBurnText("");
+      setIsBurning(false);
+    }, 300);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {(mode === "full" || mode === "lessons") && (
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-bold flex items-center justify-center gap-2 text-red-500">
-            <HeartHandshake className="h-8 w-8" />
-            Rescue Mission
-          </h2>
-          <p className="text-muted-foreground">
-            It&apos;s okay not to be okay. Here is some wisdom from your past self.
-          </p>
-        </div>
-      )}
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl border-orange-200 dark:border-orange-900/50">
+        <div className="absolute inset-0 bg-linear-to-br from-orange-500/5 via-transparent to-red-500/5 pointer-events-none rounded-lg" />
 
-      {(mode === "full" || mode === "lessons") && lessons.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-3">
-          {lessons.map((lesson, i) => (
-            <Card key={i} className="bg-secondary/20 border-secondary">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-secondary-foreground">Note to Self</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm italic">&quot;{lesson}&quot;</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+        <DialogHeader className="relative">
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <Flame className={`h-6 w-6 ${isBurning ? "animate-pulse text-orange-600" : "text-orange-500"}`} />
+            The Burn Page
+            {burned && <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse ml-auto" />}
+          </DialogTitle>
+          <DialogDescription className="text-base">
+            Release what&apos;s weighing you down. Write it out, then watch it disappear.
+          </DialogDescription>
+        </DialogHeader>
 
-      {(mode === "full" || mode === "burn") && (
-        <Card className="border-red-200 dark:border-red-900/50 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Flame className="h-5 w-5 text-orange-500" />
-              The Burn Page
-            </CardTitle>
-            <CardDescription>
-              Type out what&apos;s bothering you, then burn it away. This is a safe space to let go.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!burned ? (
-              <div
-                className={`relative transition-all duration-1000 ${
-                  isBurning ? "opacity-0 blur-xl scale-95 grayscale" : "opacity-100"
-                }`}
-              >
-                <Textarea
-                  value={burnText}
-                  onChange={(e) => setBurnText(e.target.value)}
-                  placeholder="I am feeling overwhelmed because..."
-                  className="min-h-[150px] resize-none border-red-100 focus-visible:ring-red-500"
-                />
+        <div className="space-y-4 py-4">
+          {!burned ? (
+            <div
+              className={`relative transition-all duration-2000 ${
+                isBurning ? "opacity-0 blur-2xl scale-90 rotate-1" : "opacity-100 scale-100 rotate-0"
+              }`}
+            >
+              <Textarea
+                value={burnText}
+                onChange={(e) => setBurnText(e.target.value)}
+                placeholder="Let it all out... What's bothering you? What do you need to release?"
+                className="min-h-[200px] resize-none border-orange-100 dark:border-orange-900/50 focus-visible:ring-orange-500 text-base"
+                disabled={isBurning}
+              />
+              {isBurning && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-6xl animate-bounce">🔥</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="min-h-[200px] flex flex-col items-center justify-center gap-4 text-center animate-in zoom-in duration-700">
+              <div className="text-5xl mb-2">✨</div>
+              <div className="space-y-2">
+                <p className="text-xl font-medium">It&apos;s gone now.</p>
+                <p className="text-muted-foreground">Take a deep breath. You&apos;ve let it go.</p>
               </div>
-            ) : (
-              <div className="min-h-[150px] flex items-center justify-center text-muted-foreground italic animate-in zoom-in duration-500">
-                <p>It&apos;s gone now. Breathe.</p>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="justify-between">
-            {!burned ? (
+            </div>
+          )}
+
+          <div className="text-center text-sm text-muted-foreground pt-2">
+            <p>💭 This space is private. Nothing is saved. Just let go.</p>
+          </div>
+        </div>
+
+        <DialogFooter className="flex gap-3 flex-col sm:flex-row">
+          {!burned ? (
+            <>
+              <Button variant="ghost" onClick={handleClose} className="w-full sm:w-auto order-2 sm:order-1">
+                Skip
+              </Button>
               <Button
                 variant="destructive"
                 onClick={handleBurn}
                 disabled={!burnText.trim() || isBurning}
-                className="w-full sm:w-auto"
+                className="w-full sm:flex-1 gap-2 text-base h-11 order-1 sm:order-2"
+                size="lg"
               >
+                <Flame className={`h-5 w-5 ${isBurning ? "animate-ping" : ""}`} />
                 {isBurning ? "Burning..." : "Burn It Away"}
               </Button>
-            ) : (
-              <Button variant="outline" onClick={() => setBurned(false)} className="text-muted-foreground">
-                Write More
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={handleReset} className="w-full sm:flex-1 gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Release More
               </Button>
-            )}
-
-            <Button onClick={onComplete} className="gap-2">
-              Continue Reflection <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardFooter>
-        </Card>
-      )}
-    </div>
+              <Button
+                onClick={handleClose}
+                className="w-full sm:flex-1 gap-2 bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+              >
+                <Sparkles className="h-4 w-4" />
+                Continue
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

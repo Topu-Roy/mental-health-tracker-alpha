@@ -6,7 +6,7 @@ import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { DailyCheckIn } from "@/components/DailyCheckIn";
 import { SOSPanel } from "@/components/SOSPanel";
-import { Flame, HeartHandshake, X, Sparkles } from "lucide-react";
+import { Flame, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -14,7 +14,7 @@ export default function Home() {
   const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
   const { data: checkIns = [] } = useCheckInsQuery();
   const [isCheckingIn, setIsCheckingIn] = useState(false);
-  const [sosMode, setSosMode] = useState<"burn" | "lessons" | null>(null);
+  const [sosMode, setSosMode] = useState<boolean>(false);
 
   const lastCheckIn = checkIns[0]; // Ordered by date desc
   const currentMood = todayCheckIn?.overallMood ?? lastCheckIn?.overallMood;
@@ -26,23 +26,14 @@ export default function Home() {
         <div className="pt-8 space-y-4">
           <div className="flex justify-end gap-2">
             {isSad && (
-              <>
-                <Button
-                  variant="destructive"
-                  className="gap-2 shadow-lg animate-in fade-in slide-in-from-top-4"
-                  onClick={() => setSosMode("burn")}
-                >
-                  <Flame className="h-4 w-4" />
-                  Burn Away Stress
-                </Button>
-                <Button
-                  className="gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow-lg animate-in fade-in slide-in-from-top-4"
-                  onClick={() => setSosMode("lessons")}
-                >
-                  <HeartHandshake className="h-4 w-4" />
-                  Past Learnings
-                </Button>
-              </>
+              <Button
+                variant="destructive"
+                className="gap-2 shadow-lg animate-in fade-in slide-in-from-top-4"
+                onClick={() => setSosMode(true)}
+              >
+                <Flame className="h-4 w-4" />
+                Burn Away Stress
+              </Button>
             )}
             <Link href="/memories">
               <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
@@ -65,21 +56,7 @@ export default function Home() {
         <DailyCheckIn onComplete={() => setIsCheckingIn(false)} onCancel={() => setIsCheckingIn(false)} />
       )}
 
-      {sosMode && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="w-full max-w-2xl relative">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-2 top-2 z-10"
-              onClick={() => setSosMode(null)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <SOSPanel mode={sosMode} onComplete={() => setSosMode(null)} />
-          </div>
-        </div>
-      )}
+      <SOSPanel open={sosMode} onOpenChange={setSosMode} />
     </div>
   );
 }

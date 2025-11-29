@@ -88,8 +88,10 @@ function MoonIcon({ className }: { className?: string }) {
 }
 
 export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
-  const { mutate: saveCheckIn } = useCreateDailyCheckInMutation({ date: new Date() });
-  const { mutate: updateCheckIn } = useUpdateDailyCheckInMutation({ date: new Date() });
+  const { mutate: saveCheckIn, isPending: isCreating } = useCreateDailyCheckInMutation({ date: new Date() });
+  const { mutate: updateCheckIn, isPending: isUpdating } = useUpdateDailyCheckInMutation({
+    date: new Date(),
+  });
   const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -360,6 +362,22 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                     </div>
                   </div>
 
+                  {todayCheckIn?.overallRating !== undefined && todayCheckIn?.overallRating !== null && (
+                    <div className="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-sm text-muted-foreground block mb-1">AI Day Rating</span>
+                          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                            {todayCheckIn.overallRating}/100
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs text-muted-foreground">AI-analyzed</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <span className="text-muted-foreground block mb-2">Top Emotions:</span>
                     <div className="flex flex-wrap gap-2">
@@ -400,7 +418,13 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                 {todayCheckIn && !isEditing ? (
                   <Button onClick={onComplete}>Close</Button>
                 ) : (
-                  <Button onClick={handleSubmit}>{isEditing ? "Save Changes" : "Complete Check-In"}</Button>
+                  <Button onClick={handleSubmit} disabled={isCreating || isUpdating}>
+                    {isCreating || isUpdating
+                      ? "Generating AI rating..."
+                      : isEditing
+                      ? "Save Changes"
+                      : "Complete Check-In"}
+                  </Button>
                 )}
               </>
             )}

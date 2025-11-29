@@ -3,6 +3,7 @@
 import { db } from "@/server/db";
 import { getServerAuthSession } from "@/lib/auth";
 import { z } from "zod";
+import { generateDayRating } from "./ai";
 
 const createDailyCheckInSchema = z.object({
   overallMood: z.enum(["Great", "Good", "Okay", "Bad", "Awful"]),
@@ -39,11 +40,20 @@ export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckI
     throw new Error("Check-in already exists for today");
   }
 
+  // Generate AI rating
+  const overallRating = await generateDayRating({
+    overallMood,
+    emotions,
+    lessonsLearned,
+    learnings,
+  });
+
   const checkIn = await db.dailyCheckIn.create({
     data: {
       overallMood,
       emotions,
       lessonsLearned,
+      overallRating,
       userId: session.user.id,
       date: new Date(),
       learnings: learnings
@@ -130,6 +140,14 @@ export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckI
     throw new Error("Can only edit today's check-in");
   }
 
+  // Regenerate AI rating with updated data
+  const overallRating = await generateDayRating({
+    overallMood,
+    emotions,
+    lessonsLearned,
+    learnings,
+  });
+
   // Delete existing learnings and create new ones
   await db.checkInLearning.deleteMany({
     where: { dailyCheckInId: id },
@@ -141,6 +159,7 @@ export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckI
       overallMood,
       emotions,
       lessonsLearned,
+      overallRating,
       learnings: learnings
         ? {
             create: learnings.map((content) => ({

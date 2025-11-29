@@ -6,9 +6,9 @@ import { Dashboard } from "@/components/Dashboard";
 import { JournalList } from "@/components/JournalList";
 import { DailyCheckIn } from "@/components/DailyCheckIn";
 import { SOSPanel } from "@/components/SOSPanel";
-import { PerspectiveShifter } from "@/components/PerspectiveShifter";
-import { Flame, HeartHandshake, X } from "lucide-react";
+import { Flame, HeartHandshake, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
@@ -44,7 +44,12 @@ export default function Home() {
                 </Button>
               </>
             )}
-            <PerspectiveShifter />
+            <Link href="/memories">
+              <Button className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
+                <Sparkles className="h-4 w-4" />
+                View Memories & Learnings
+              </Button>
+            </Link>
           </div>
           <Dashboard onStartReflection={() => setIsCheckingIn(true)} />
         </div>

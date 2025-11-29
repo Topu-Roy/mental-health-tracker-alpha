@@ -10,6 +10,7 @@ const createDailyCheckInSchema = z.object({
   emotions: z.record(z.string(), z.number()), // e.g., { "Happy": 2, "Anxious": 1 }
   lessonsLearned: z.string().optional(),
   learnings: z.array(z.string()).optional(),
+  memories: z.array(z.string()).optional(),
 });
 
 export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckInSchema>) {
@@ -18,7 +19,8 @@ export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckI
     throw new Error("Unauthorized");
   }
 
-  const { overallMood, emotions, lessonsLearned, learnings } = createDailyCheckInSchema.parse(input);
+  const { overallMood, emotions, lessonsLearned, learnings, memories } =
+    createDailyCheckInSchema.parse(input);
 
   // Check if check-in already exists for today
   const today = new Date();
@@ -64,9 +66,18 @@ export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckI
             })),
           }
         : undefined,
+      memories: memories
+        ? {
+            create: memories.map((content) => ({
+              content,
+              userId: session.user.id,
+            })),
+          }
+        : undefined,
     },
     include: {
       learnings: true,
+      memories: true,
     },
   });
 
@@ -94,6 +105,7 @@ export async function getDailyCheckIn(date: Date) {
     },
     include: {
       learnings: true,
+      memories: true,
     },
   });
 
@@ -106,6 +118,7 @@ const updateDailyCheckInSchema = z.object({
   emotions: z.record(z.string(), z.number()),
   lessonsLearned: z.string().optional(),
   learnings: z.array(z.string()).optional(),
+  memories: z.array(z.string()).optional(),
 });
 
 export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckInSchema>) {
@@ -114,12 +127,13 @@ export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckI
     throw new Error("Unauthorized");
   }
 
-  const { id, overallMood, emotions, lessonsLearned, learnings } = updateDailyCheckInSchema.parse(input);
+  const { id, overallMood, emotions, lessonsLearned, learnings, memories } =
+    updateDailyCheckInSchema.parse(input);
 
   // Get the existing check-in
   const existingCheckIn = await db.dailyCheckIn.findUnique({
     where: { id },
-    include: { learnings: true },
+    include: { learnings: true, memories: true },
   });
 
   if (!existingCheckIn) {
@@ -153,6 +167,11 @@ export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckI
     where: { dailyCheckInId: id },
   });
 
+  // Delete existing memories and create new ones
+  await db.checkInMemory.deleteMany({
+    where: { dailyCheckInId: id },
+  });
+
   const updatedCheckIn = await db.dailyCheckIn.update({
     where: { id },
     data: {
@@ -168,9 +187,18 @@ export async function updateDailyCheckIn(input: z.infer<typeof updateDailyCheckI
             })),
           }
         : undefined,
+      memories: memories
+        ? {
+            create: memories.map((content) => ({
+              content,
+              userId: session.user.id,
+            })),
+          }
+        : undefined,
     },
     include: {
       learnings: true,
+      memories: true,
     },
   });
 
@@ -192,6 +220,7 @@ export async function getCheckIns() {
     },
     include: {
       learnings: true,
+      memories: true,
     },
   });
 

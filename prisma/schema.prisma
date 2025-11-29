@@ -40,6 +40,7 @@ model DailyCheckIn {
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   learnings      CheckInLearning[]
+  memories       CheckInMemory[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -47,6 +48,22 @@ model DailyCheckIn {
   @@unique([userId, date])
   @@index([userId])
   @@map("daily_reflection")
+}
+
+model CheckInMemory {
+  id             String   @id @default(uuid())
+  userId         String
+  dailyCheckInId String
+  content        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyCheckIn DailyCheckIn @relation(fields: [dailyCheckInId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([dailyCheckInId])
+  @@map("memory")
 }
 
 model CheckInLearning {
@@ -66,23 +83,24 @@ model CheckInLearning {
 }
 
 model User {
-  id             String            @id @default(uuid())
-  name           String
-  email          String
-  emailVerified  Boolean           @default(false)
-  image          String?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
-  role           String?
-  banned         Boolean?          @default(false)
-  banReason      String?
-  banExpires     DateTime?
-  sessions       Session[]
-  accounts       Account[]
-  passkeys       Passkey[]
-  journalEntries JournalEntry[]
-  dailyCheckIns  DailyCheckIn[]
-  learnings      CheckInLearning[]
+  id              String            @id @default(uuid())
+  name            String
+  email           String
+  emailVerified   Boolean           @default(false)
+  image           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  role            String?
+  banned          Boolean?          @default(false)
+  banReason       String?
+  banExpires      DateTime?
+  sessions        Session[]
+  accounts        Account[]
+  passkeys        Passkey[]
+  journalEntries  JournalEntry[]
+  dailyCheckIns   DailyCheckIn[]
+  learnings       CheckInLearning[]
+  checkInMemories CheckInMemory[]
 
   @@map("user")
 }

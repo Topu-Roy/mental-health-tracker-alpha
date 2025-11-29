@@ -19,6 +19,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Edit2,
+  Plus,
+  X,
 } from "lucide-react";
 import type { Mood } from "@/generated/prisma/enums";
 import {
@@ -95,7 +97,7 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
   const { data: todayCheckIn } = useDailyCheckInQuery({ date: new Date() });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [step, setStep] = useState(todayCheckIn && !isEditing ? 4 : 1);
+  const [step, setStep] = useState(todayCheckIn && !isEditing ? 5 : 1);
   const [showSOS, setShowSOS] = useState(false);
 
   const [assessment, setAssessment] = useState<number>(5);
@@ -133,8 +135,11 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
 
   const [emotionTallies, setEmotionTallies] = useState<Record<Emotion, number>>(initializeEmotionTallies());
 
-  const [learned, setLearned] = useState(todayCheckIn?.lessonsLearned ?? "");
-  const [lessons, setLessons] = useState(todayCheckIn?.learnings?.map((l) => l.content).join("\n") ?? "");
+  const [learned] = useState(todayCheckIn?.lessonsLearned ?? "");
+  const [learnings, setLearnings] = useState<string[]>(todayCheckIn?.learnings?.map((l) => l.content) ?? []);
+  const [memories, setMemories] = useState<string[]>(todayCheckIn?.memories?.map((m) => m.content) ?? []);
+
+  const [currentInput, setCurrentInput] = useState("");
 
   const handleNext = () => {
     if (step === 1 && generalMood) {
@@ -159,6 +164,25 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
       ...prev,
       [emotion]: Math.max(0, prev[emotion] + delta),
     }));
+  };
+
+  const handleAddItem = (
+    list: string[],
+    setList: React.Dispatch<React.SetStateAction<string[]>>,
+    item: string
+  ) => {
+    if (item.trim()) {
+      setList([...list, item.trim()]);
+      setCurrentInput("");
+    }
+  };
+
+  const handleRemoveItem = (
+    list: string[],
+    setList: React.Dispatch<React.SetStateAction<string[]>>,
+    index: number
+  ) => {
+    setList(list.filter((_, i) => i !== index));
   };
 
   const handleEdit = () => {
@@ -209,7 +233,8 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
       overallMood: generalMood,
       emotions: emotionsToSave,
       lessonsLearned: learned,
-      learnings: lessons.split("\n").filter((l) => l.trim().length > 0),
+      learnings: learnings,
+      memories: memories,
     };
 
     if (todayCheckIn && isEditing) {
@@ -218,14 +243,14 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
         {
           onSuccess: () => {
             setIsEditing(false);
-            setStep(4);
+            setStep(5);
           },
         }
       );
     } else {
       saveCheckIn(checkInData, {
         onSuccess: () => {
-          setStep(4);
+          setStep(5);
         },
       });
     }
@@ -236,7 +261,7 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
       <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-2">
         <CardHeader>
           <CardTitle>Daily Check-In</CardTitle>
-          <CardDescription>Step {step} of 4</CardDescription>
+          <CardDescription>Step {step} of 5</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {showSOS ? (
@@ -320,27 +345,110 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
               {step === 3 && (
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-lg">What did you learn today?</Label>
-                    <Textarea
-                      value={learned}
-                      onChange={(e) => setLearned(e.target.value)}
-                      placeholder="I learned that..."
-                      className="min-h-[120px]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-lg">What lessons did you gather?</Label>
-                    <Textarea
-                      value={lessons}
-                      onChange={(e) => setLessons(e.target.value)}
-                      placeholder="Key takeaways..."
-                      className="min-h-[120px]"
-                    />
+                    <Label className="text-lg">Memories of the day</Label>
+                    <p className="text-sm text-muted-foreground">Add any significant memories from today.</p>
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                        placeholder="I remember..."
+                        className="min-h-[80px]"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAddItem(memories, setMemories, currentInput);
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={() => handleAddItem(memories, setMemories, currentInput)}
+                        size="icon"
+                        className="h-auto"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      {memories.map((memory, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start justify-between p-3 bg-secondary/50 rounded-lg group"
+                        >
+                          <p className="text-sm">{memory}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveItem(memories, setMemories, index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      {memories.length === 0 && (
+                        <p className="text-sm text-muted-foreground italic">
+                          No memories added yet. Click Next to skip.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
 
               {step === 4 && (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label className="text-lg">Learnings of the day</Label>
+                    <p className="text-sm text-muted-foreground">What did you learn today?</p>
+                    <div className="flex gap-2">
+                      <Textarea
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                        placeholder="I learned that..."
+                        className="min-h-[80px]"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleAddItem(learnings, setLearnings, currentInput);
+                          }
+                        }}
+                      />
+                      <Button
+                        onClick={() => handleAddItem(learnings, setLearnings, currentInput)}
+                        size="icon"
+                        className="h-auto"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      {learnings.map((learning, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start justify-between p-3 bg-secondary/50 rounded-lg group"
+                        >
+                          <p className="text-sm">{learning}</p>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleRemoveItem(learnings, setLearnings, index)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      {learnings.length === 0 && (
+                        <p className="text-sm text-muted-foreground italic">
+                          No learnings added yet. Click Next to skip.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 5 && (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold">Summary</h3>
@@ -395,8 +503,33 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <span className="text-muted-foreground">Learned:</span>
-                    <p className="p-3 bg-muted/30 rounded-md text-sm">{learned || "Nothing recorded"}</p>
+                    <span className="text-muted-foreground">Memories:</span>
+                    {memories.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {memories.map((m, i) => (
+                          <li key={i} className="text-sm">
+                            {m}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">None recorded</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="text-muted-foreground">Learnings:</span>
+                    {learnings.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {learnings.map((l, i) => (
+                          <li key={i} className="text-sm">
+                            {l}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">None recorded</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -409,7 +542,7 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
               {step === 1 ? "Cancel" : "Back"}
             </Button>
 
-            {step < 4 ? (
+            {step < 5 ? (
               <Button onClick={handleNext} disabled={step === 1 && !generalMood}>
                 Next
               </Button>

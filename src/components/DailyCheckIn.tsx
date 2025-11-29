@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { SOSPanel } from "@/components/SOSPanel";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -278,42 +279,57 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Daily Check-In</DialogTitle>
-          <DialogDescription>Step {step} of 5</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-6 py-4">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-hidden">
+        <div className="px-6 py-4 border-b">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Daily Check-In</DialogTitle>
+            <DialogDescription>Step {step} of 5</DialogDescription>
+          </DialogHeader>
+        </div>
+        <div className="p-6 space-y-6">
           {showSOS ? (
             <SOSPanel onComplete={handleSOSComplete} />
           ) : (
             <>
               {step === 1 && (
-                <div className="space-y-8 py-4">
+                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-4">
-                    <Label className="text-lg">How was your day overall? ({assessment}/10)</Label>
-                    <Slider
-                      value={[assessment]}
-                      onValueChange={(vals) => setAssessment(vals[0])}
-                      min={1}
-                      max={10}
-                      step={1}
-                      className="py-4"
-                    />
+                    <Label className="text-lg font-medium">How was your day? ({assessment}/10)</Label>
+                    <div className="px-2">
+                      <Slider
+                        value={[assessment]}
+                        onValueChange={(vals) => setAssessment(vals[0])}
+                        min={1}
+                        max={10}
+                        step={1}
+                        className="py-4 cursor-pointer"
+                      />
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground px-1">
+                      <span>Rough</span>
+                      <span>Okay</span>
+                      <span>Great</span>
+                    </div>
                   </div>
                   <div className="space-y-4">
-                    <Label className="text-lg">What was your general mood?</Label>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    <Label className="text-lg font-medium">Current Mood</Label>
+                    <div className="grid grid-cols-5 gap-2">
                       {MOODS.map(({ label, icon }) => (
-                        <Button
+                        <button
                           key={label}
-                          variant={generalMood === label ? "default" : "outline"}
-                          className="h-auto py-3 flex flex-col gap-2"
                           onClick={() => setGeneralMood(label)}
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-105",
+                            generalMood === label
+                              ? "border-primary bg-primary/5 text-primary shadow-sm"
+                              : "border-transparent bg-secondary/50 hover:bg-secondary text-muted-foreground"
+                          )}
                         >
-                          {icon}
-                          <span className="text-xs">{label}</span>
-                        </Button>
+                          <div className={cn("transition-transform", generalMood === label && "scale-110")}>
+                            {icon}
+                          </div>
+                          <span className="text-[10px] font-medium uppercase tracking-wide">{label}</span>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -321,58 +337,66 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
               )}
 
               {step === 2 && (
-                <div className="space-y-4">
-                  <Label className="text-lg">Emotion Tally</Label>
-                  <p className="text-sm text-muted-foreground">
-                    How many times did you feel each emotion today?
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {EMOTIONS.map(({ label, icon }) => (
-                      <div
-                        key={label}
-                        className="flex items-center justify-between p-3 border rounded-lg bg-card/50"
-                      >
-                        <div className="flex items-center gap-3">
-                          {icon}
-                          <span className="font-medium">{label}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleTally(label, -1)}
-                            disabled={emotionTallies[label] === 0}
-                          >
-                            -
-                          </Button>
-                          <span className="w-6 text-center font-bold">{emotionTallies[label]}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleTally(label, 1)}
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="space-y-2">
+                    <Label className="text-lg font-medium">Emotions felt</Label>
+                    <p className="text-sm text-muted-foreground">Tap to add, tap again to increase count.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {EMOTIONS.map(({ label, icon }) => {
+                      const count = emotionTallies[label];
+                      return (
+                        <button
+                          key={label}
+                          onClick={() => handleTally(label, 1)}
+                          className={cn(
+                            "group relative flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200",
+                            count > 0
+                              ? "border-primary/50 bg-primary/5 text-primary shadow-xs"
+                              : "border-border bg-background hover:border-primary/30 hover:bg-secondary/50"
+                          )}
+                        >
+                          <span className="text-lg">{icon}</span>
+                          <span className="text-sm font-medium">{label}</span>
+                          {count > 0 && (
+                            <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-in zoom-in">
+                              {count}
+                            </span>
+                          )}
+                          {count > 0 && (
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTally(label, -1);
+                              }}
+                              className="absolute -top-1 -right-1 hidden h-5 w-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow-sm group-hover:flex hover:scale-110"
+                            >
+                              <X className="h-3 w-3" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
               {step === 3 && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-2">
-                    <Label className="text-lg">Memories of the day</Label>
-                    <p className="text-sm text-muted-foreground">Add any significant memories from today.</p>
-                    <div className="flex gap-2">
+                    <Label className="text-lg font-medium">Memories</Label>
+                    <p className="text-sm text-muted-foreground">Significant moments from today.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="relative">
                       <Textarea
                         value={memoryInput}
                         onChange={(e) => setMemoryInput(e.target.value)}
                         placeholder="I remember..."
-                        className="min-h-[80px]"
+                        className="min-h-[100px] resize-none pr-12 bg-secondary/20 focus:bg-background transition-colors"
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -383,49 +407,49 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                       <Button
                         onClick={() => handleAddItem(memories, setMemories, memoryInput, setMemoryInput)}
                         size="icon"
-                        className="h-auto"
+                        className="absolute bottom-3 right-3 h-8 w-8 rounded-full shadow-sm"
+                        disabled={!memoryInput.trim()}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="space-y-2 mt-4">
+
+                    <div className="flex flex-wrap gap-2">
                       {memories.map((memory, index) => (
                         <div
                           key={index}
-                          className="flex items-start justify-between p-3 bg-secondary/50 rounded-lg group"
+                          className="group flex items-center gap-2 pl-3 pr-1 py-1.5 bg-secondary/50 rounded-full text-sm animate-in zoom-in duration-200"
                         >
-                          <p className="text-sm">{memory}</p>
+                          <span className="max-w-[200px] truncate">{memory}</span>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => handleRemoveItem(memories, setMemories, index)}
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
                       ))}
-                      {memories.length === 0 && (
-                        <p className="text-sm text-muted-foreground italic">
-                          No memories added yet. Click Next to skip.
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
               )}
 
               {step === 4 && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="space-y-2">
-                    <Label className="text-lg">Learnings of the day</Label>
-                    <p className="text-sm text-muted-foreground">What did you learn today?</p>
-                    <div className="flex gap-2">
+                    <Label className="text-lg font-medium">Learnings</Label>
+                    <p className="text-sm text-muted-foreground">Key takeaways from today.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="relative">
                       <Textarea
                         value={learningInput}
                         onChange={(e) => setLearningInput(e.target.value)}
                         placeholder="I learned that..."
-                        className="min-h-[80px]"
+                        className="min-h-[100px] resize-none pr-12 bg-secondary/20 focus:bg-background transition-colors"
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -438,120 +462,139 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                           handleAddItem(learnings, setLearnings, learningInput, setLearningInput)
                         }
                         size="icon"
-                        className="h-auto"
+                        className="absolute bottom-3 right-3 h-8 w-8 rounded-full shadow-sm"
+                        disabled={!learningInput.trim()}
                       >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <div className="space-y-2 mt-4">
+
+                    <div className="flex flex-wrap gap-2">
                       {learnings.map((learning, index) => (
                         <div
                           key={index}
-                          className="flex items-start justify-between p-3 bg-secondary/50 rounded-lg group"
+                          className="group flex items-center gap-2 pl-3 pr-1 py-1.5 bg-secondary/50 rounded-full text-sm animate-in zoom-in duration-200"
                         >
-                          <p className="text-sm">{learning}</p>
+                          <span className="max-w-[200px] truncate">{learning}</span>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="h-6 w-6 rounded-full hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => handleRemoveItem(learnings, setLearnings, index)}
                           >
-                            <X className="h-4 w-4" />
+                            <X className="h-3 w-3" />
                           </Button>
                         </div>
                       ))}
-                      {learnings.length === 0 && (
-                        <p className="text-sm text-muted-foreground italic">
-                          No learnings added yet. Click Next to skip.
-                        </p>
-                      )}
                     </div>
                   </div>
                 </div>
               )}
 
               {step === 5 && (
-                <div className="space-y-6">
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold">Summary</h3>
                     {todayCheckIn && !isEditing && (
-                      <Button variant="outline" size="sm" onClick={handleEdit} className="gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleEdit}
+                        className="gap-2 text-muted-foreground hover:text-foreground"
+                      >
                         <Edit2 className="h-4 w-4" />
                         Edit
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Overall:</span>
-                      <p className="font-medium text-lg">{assessment}/10</p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-secondary/30 border">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Overall</span>
+                      <p className="font-bold text-2xl mt-1">{assessment}/10</p>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Mood:</span>
-                      <p className="font-medium text-lg">{generalMood}</p>
+                    <div className="p-4 rounded-xl bg-secondary/30 border">
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider">Mood</span>
+                      <p className="font-bold text-2xl mt-1">{generalMood}</p>
                     </div>
                   </div>
 
                   {todayCheckIn?.overallRating !== undefined && todayCheckIn?.overallRating !== null && (
-                    <div className="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                      <div className="flex items-center justify-between">
+                    <div className="relative overflow-hidden bg-linear-to-br from-indigo-500/10 to-purple-500/10 p-6 rounded-xl border border-indigo-500/20">
+                      <div className="flex items-center justify-between relative z-10">
                         <div>
-                          <span className="text-sm text-muted-foreground block mb-1">AI Day Rating</span>
-                          <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                            {todayCheckIn.overallRating}/100
+                          <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400 block mb-1">
+                            AI Day Rating
+                          </span>
+                          <p className="text-4xl font-black text-foreground tracking-tight">
+                            {todayCheckIn.overallRating}
+                            <span className="text-lg text-muted-foreground font-normal ml-1">/100</span>
                           </p>
                         </div>
-                        <div className="text-right">
-                          <span className="text-xs text-muted-foreground">AI-analyzed</span>
+                        <div className="h-12 w-12 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                          <Zap className="h-6 w-6 text-indigo-500" />
                         </div>
                       </div>
                     </div>
                   )}
 
-                  <div>
-                    <span className="text-muted-foreground block mb-2">Top Emotions:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(emotionTallies)
-                        .filter(([, c]) => c > 0)
-                        .map(([e, c]) => (
-                          <span key={e} className="px-2 py-1 bg-secondary rounded-md text-xs font-medium">
-                            {e}: {c}
-                          </span>
-                        ))}
-                      {Object.values(emotionTallies).every((c) => c === 0) && (
-                        <span className="text-muted-foreground italic">None recorded</span>
-                      )}
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                        Emotions
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.entries(emotionTallies)
+                          .filter(([, c]) => c > 0)
+                          .map(([e, c]) => (
+                            <span
+                              key={e}
+                              className="px-3 py-1 bg-secondary rounded-full text-xs font-medium flex items-center gap-1.5"
+                            >
+                              {e}
+                              <span className="bg-background/50 px-1.5 rounded-full text-[10px]">{c}</span>
+                            </span>
+                          ))}
+                        {Object.values(emotionTallies).every((c) => c === 0) && (
+                          <span className="text-sm text-muted-foreground italic">None recorded</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <span className="text-muted-foreground">Memories:</span>
-                    {memories.length > 0 ? (
-                      <ul className="list-disc list-inside space-y-1">
-                        {memories.map((m, i) => (
-                          <li key={i} className="text-sm">
-                            {m}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">None recorded</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <span className="text-muted-foreground">Learnings:</span>
-                    {learnings.length > 0 ? (
-                      <ul className="list-disc list-inside space-y-1">
-                        {learnings.map((l, i) => (
-                          <li key={i} className="text-sm">
-                            {l}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">None recorded</p>
-                    )}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                          Memories
+                        </span>
+                        {memories.length > 0 ? (
+                          <ul className="space-y-1.5">
+                            {memories.map((m, i) => (
+                              <li key={i} className="text-sm pl-3 border-l-2 border-primary/20">
+                                {m}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">None</p>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-2">
+                          Learnings
+                        </span>
+                        {learnings.length > 0 ? (
+                          <ul className="space-y-1.5">
+                            {learnings.map((l, i) => (
+                              <li key={i} className="text-sm pl-3 border-l-2 border-primary/20">
+                                {l}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">None</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -559,31 +602,33 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
           )}
         </div>
         {!showSOS && (
-          <DialogFooter className="flex sm:justify-between gap-2">
-            <Button variant="ghost" onClick={step === 1 ? onCancel : handleBack}>
-              {step === 1 ? "Cancel" : "Back"}
-            </Button>
-
-            {step < 5 ? (
-              <Button onClick={handleNext} disabled={step === 1 && !generalMood}>
-                Next
+          <div className="p-6 border-t bg-secondary/10">
+            <DialogFooter className="flex sm:justify-between gap-2">
+              <Button variant="ghost" onClick={step === 1 ? onCancel : handleBack}>
+                {step === 1 ? "Cancel" : "Back"}
               </Button>
-            ) : (
-              <>
-                {todayCheckIn && !isEditing ? (
-                  <Button onClick={onComplete}>Close</Button>
-                ) : (
-                  <Button onClick={handleSubmit} disabled={isCreating || isUpdating}>
-                    {isCreating || isUpdating
-                      ? "Generating AI rating..."
-                      : isEditing
-                      ? "Save Changes"
-                      : "Complete Check-In"}
-                  </Button>
-                )}
-              </>
-            )}
-          </DialogFooter>
+
+              {step < 5 ? (
+                <Button onClick={handleNext} disabled={step === 1 && !generalMood}>
+                  Next
+                </Button>
+              ) : (
+                <>
+                  {todayCheckIn && !isEditing ? (
+                    <Button onClick={onComplete}>Close</Button>
+                  ) : (
+                    <Button onClick={handleSubmit} disabled={isCreating || isUpdating}>
+                      {isCreating || isUpdating
+                        ? "Generating AI rating..."
+                        : isEditing
+                        ? "Save Changes"
+                        : "Complete Check-In"}
+                    </Button>
+                  )}
+                </>
+              )}
+            </DialogFooter>
+          </div>
         )}
       </DialogContent>
     </Dialog>

@@ -4,7 +4,14 @@ import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { SOSPanel } from "@/components/SOSPanel";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
@@ -150,6 +157,17 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
         return;
       }
     }
+
+    if (step === 3 && memoryInput.trim()) {
+      setMemories((prev) => [...prev, memoryInput.trim()]);
+      setMemoryInput("");
+    }
+
+    if (step === 4 && learningInput.trim()) {
+      setLearnings((prev) => [...prev, learningInput.trim()]);
+      setLearningInput("");
+    }
+
     setStep((prev) => prev + 1);
   };
 
@@ -259,13 +277,13 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border-2">
-        <CardHeader>
-          <CardTitle>Daily Check-In</CardTitle>
-          <CardDescription>Step {step} of 5</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <Dialog open={true} onOpenChange={(open) => !open && onCancel()}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Daily Check-In</DialogTitle>
+          <DialogDescription>Step {step} of 5</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-6 py-4">
           {showSOS ? (
             <SOSPanel onComplete={handleSOSComplete} />
           ) : (
@@ -539,9 +557,9 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
               )}
             </>
           )}
-        </CardContent>
+        </div>
         {!showSOS && (
-          <CardFooter className="flex justify-between">
+          <DialogFooter className="flex sm:justify-between gap-2">
             <Button variant="ghost" onClick={step === 1 ? onCancel : handleBack}>
               {step === 1 ? "Cancel" : "Back"}
             </Button>
@@ -565,9 +583,9 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                 )}
               </>
             )}
-          </CardFooter>
+          </DialogFooter>
         )}
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

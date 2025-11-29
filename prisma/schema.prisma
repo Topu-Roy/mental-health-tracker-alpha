@@ -36,7 +36,7 @@ model DailyCheckIn {
   overallMood    Mood
   emotions       Json // Example: { "Happy": 2, "Anxious": 1 }
   lessonsLearned String?
-  overallRating  Int? // AI-generated rating out of 100
+  overallRating  Int
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   learnings      CheckInLearning[]

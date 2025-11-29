@@ -139,7 +139,8 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
   const [learnings, setLearnings] = useState<string[]>(todayCheckIn?.learnings?.map((l) => l.content) ?? []);
   const [memories, setMemories] = useState<string[]>(todayCheckIn?.memories?.map((m) => m.content) ?? []);
 
-  const [currentInput, setCurrentInput] = useState("");
+  const [memoryInput, setMemoryInput] = useState("");
+  const [learningInput, setLearningInput] = useState("");
 
   const handleNext = () => {
     if (step === 1 && generalMood) {
@@ -169,11 +170,12 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
   const handleAddItem = (
     list: string[],
     setList: React.Dispatch<React.SetStateAction<string[]>>,
-    item: string
+    item: string,
+    setInput: React.Dispatch<React.SetStateAction<string>>
   ) => {
     if (item.trim()) {
       setList([...list, item.trim()]);
-      setCurrentInput("");
+      setInput("");
     }
   };
 
@@ -349,19 +351,19 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                     <p className="text-sm text-muted-foreground">Add any significant memories from today.</p>
                     <div className="flex gap-2">
                       <Textarea
-                        value={currentInput}
-                        onChange={(e) => setCurrentInput(e.target.value)}
+                        value={memoryInput}
+                        onChange={(e) => setMemoryInput(e.target.value)}
                         placeholder="I remember..."
                         className="min-h-[80px]"
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
-                            handleAddItem(memories, setMemories, currentInput);
+                            handleAddItem(memories, setMemories, memoryInput, setMemoryInput);
                           }
                         }}
                       />
                       <Button
-                        onClick={() => handleAddItem(memories, setMemories, currentInput)}
+                        onClick={() => handleAddItem(memories, setMemories, memoryInput, setMemoryInput)}
                         size="icon"
                         className="h-auto"
                       >
@@ -402,19 +404,21 @@ export function DailyCheckIn({ onComplete, onCancel }: DailyCheckInProps) {
                     <p className="text-sm text-muted-foreground">What did you learn today?</p>
                     <div className="flex gap-2">
                       <Textarea
-                        value={currentInput}
-                        onChange={(e) => setCurrentInput(e.target.value)}
+                        value={learningInput}
+                        onChange={(e) => setLearningInput(e.target.value)}
                         placeholder="I learned that..."
                         className="min-h-[80px]"
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
-                            handleAddItem(learnings, setLearnings, currentInput);
+                            handleAddItem(learnings, setLearnings, learningInput, setLearningInput);
                           }
                         }}
                       />
                       <Button
-                        onClick={() => handleAddItem(learnings, setLearnings, currentInput)}
+                        onClick={() =>
+                          handleAddItem(learnings, setLearnings, learningInput, setLearningInput)
+                        }
                         size="icon"
                         className="h-auto"
                       >

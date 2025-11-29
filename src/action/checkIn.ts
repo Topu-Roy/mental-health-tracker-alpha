@@ -25,7 +25,7 @@ export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckI
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const existingCheckIn = await db.dailyReflection.findFirst({
+  const existingCheckIn = await db.dailyCheckIn.findFirst({
     where: {
       userId: session.user.id,
       date: {
@@ -39,7 +39,7 @@ export async function createDailyCheckIn(input: z.infer<typeof createDailyCheckI
     throw new Error("Check-in already exists for today");
   }
 
-  const checkIn = await db.dailyReflection.create({
+  const checkIn = await db.dailyCheckIn.create({
     data: {
       overallMood,
       emotions,
@@ -74,7 +74,7 @@ export async function getDailyCheckIn(date: Date) {
   const endOfDay = new Date(startOfDay);
   endOfDay.setDate(endOfDay.getDate() + 1);
 
-  const checkIn = await db.dailyReflection.findFirst({
+  const checkIn = await db.dailyCheckIn.findFirst({
     where: {
       userId: session.user.id,
       date: {
@@ -96,7 +96,7 @@ export async function getCheckIns() {
     throw new Error("Unauthorized");
   }
 
-  const checkIns = await db.dailyReflection.findMany({
+  const checkIns = await db.dailyCheckIn.findMany({
     where: {
       userId: session.user.id,
     },

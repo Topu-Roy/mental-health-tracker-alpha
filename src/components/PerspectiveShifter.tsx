@@ -5,12 +5,12 @@ import { useCheckInsQuery } from "@/hooks/useCheckIn";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Sparkles, X, Quote, Calendar } from "lucide-react";
-import { DailyReflection } from "@/generated/prisma/client";
+import { DailyCheckIn } from "@/generated/prisma/client";
 
 export function PerspectiveShifter() {
   const { data: checkIns = [] } = useCheckInsQuery();
   const [isOpen, setIsOpen] = useState(false);
-  const [memory, setMemory] = useState<DailyReflection | null>(null);
+  const [memory, setMemory] = useState<DailyCheckIn | null>(null);
 
   const getHappyMemory = () => {
     const goodMoods = ["Great", "Good", "Happy", "Excited", "Grateful", "Proud", "Hopeful", "Relaxed"];
@@ -55,7 +55,7 @@ export function PerspectiveShifter() {
     );
   }
 
-  const getMemoryContent = (mem: DailyReflection) => {
+  const getMemoryContent = (mem: DailyCheckIn) => {
     if (mem.lessonsLearned) return mem.lessonsLearned;
     if (mem.lessonsLearned && mem.lessonsLearned.length > 0) return mem.lessonsLearned[0];
     return "I had a really good day today.";

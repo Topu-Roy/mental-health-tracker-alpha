@@ -1,7 +1,16 @@
-export type Emotion = 
-  | 'Happy' | 'Excited' | 'Grateful' | 'Relaxed'
-  | 'Sad' | 'Anxious' | 'Angry' | 'Tired'
-  | 'Frustrated' | 'Confused' | 'Proud' | 'Hopeful';
+export type Emotion =
+  | "Happy"
+  | "Excited"
+  | "Grateful"
+  | "Relaxed"
+  | "Sad"
+  | "Anxious"
+  | "Angry"
+  | "Tired"
+  | "Frustrated"
+  | "Confused"
+  | "Proud"
+  | "Hopeful";
 
 export interface EmotionTally {
   emotion: Emotion;
@@ -14,7 +23,7 @@ export interface JournalEntry {
   timestamp: Date;
 }
 
-export interface DailyReflection {
+export interface DailyCheckIn {
   id: string;
   date: string; // YYYY-MM-DD
   overallAssessment: number; // 1-10
@@ -27,5 +36,5 @@ export interface DailyReflection {
 
 export interface JournalState {
   entries: JournalEntry[];
-  reflections: DailyReflection[];
+  checkIns: DailyCheckIn[];
 }

@@ -29,59 +29,59 @@ model JournalEntry {
   @@map("journal_entry")
 }
 
-model DailyReflection {
-  id             String     @id @default(uuid())
+model DailyCheckIn {
+  id             String            @id @default(uuid())
   userId         String
-  date           DateTime   @default(now())
+  date           DateTime          @default(now())
   overallMood    Mood
   emotions       Json // Example: { "Happy": 2, "Anxious": 1 }
   lessonsLearned String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  learnings      Learning[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  learnings      CheckInLearning[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // One reflection per user per day
+  // One check-in per user per day
   @@unique([userId, date])
   @@index([userId])
   @@map("daily_reflection")
 }
 
-model Learning {
-  id                String   @id @default(uuid())
-  userId            String
-  dailyReflectionId String
-  content           String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+model CheckInLearning {
+  id             String   @id @default(uuid())
+  userId         String
+  dailyCheckInId String
+  content        String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  dailyReflection DailyReflection @relation(fields: [dailyReflectionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyCheckIn DailyCheckIn @relation(fields: [dailyCheckInId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([dailyReflectionId])
+  @@index([dailyCheckInId])
   @@map("learning")
 }
 
 model User {
-  id               String            @id @default(uuid())
-  name             String
-  email            String
-  emailVerified    Boolean           @default(false)
-  image            String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  role             String?
-  banned           Boolean?          @default(false)
-  banReason        String?
-  banExpires       DateTime?
-  sessions         Session[]
-  accounts         Account[]
-  passkeys         Passkey[]
-  journalEntries   JournalEntry[]
-  dailyReflections DailyReflection[]
-  learnings        Learning[]
+  id             String            @id @default(uuid())
+  name           String
+  email          String
+  emailVerified  Boolean           @default(false)
+  image          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  role           String?
+  banned         Boolean?          @default(false)
+  banReason      String?
+  banExpires     DateTime?
+  sessions       Session[]
+  accounts       Account[]
+  passkeys       Passkey[]
+  journalEntries JournalEntry[]
+  dailyCheckIns  DailyCheckIn[]
+  learnings      CheckInLearning[]
 
   @@map("user")
 }
